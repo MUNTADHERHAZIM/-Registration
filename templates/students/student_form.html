@@ -1,0 +1,96 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'student_list' %}">الطلاب</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+{% block content %}
+<div class="fade-in">
+<div class="card" style="max-width:960px;margin:0 auto">
+    <div class="card-header d-flex align-items-center gap-2">
+        <div style="width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <span>{{ title }}</span>
+    </div>
+    <div class="card-body">
+        <!-- Camera Preview (Hidden by default) -->
+        <div id="cameraArea" class="mb-4 d-none">
+            <div class="d-flex flex-column align-items-center bg-light p-3 border rounded">
+                <video id="video" width="320" height="240" autoplay class="border mb-2"></video>
+                <div class="d-flex gap-2">
+                    <button type="button" id="snap" class="btn btn-primary btn-sm"><i class="fas fa-camera me-1"></i>التقاط</button>
+                    <button type="button" id="closeCamera" class="btn btn-outline-danger btn-sm">إلغاء</button>
+                </div>
+                <canvas id="canvas" width="320" height="240" class="d-none"></canvas>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate id="studentForm">
+            {% csrf_token %}
+            {% crispy form %}
+        </form>
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inject camera button next to photo input
+    const photoInput = document.querySelector('input[type="file"][name="photo"]');
+    if (photoInput) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-outline-primary btn-sm mt-1';
+        btn.innerHTML = '<i class="fas fa-camera me-1"></i>التقاط صورة بالكاميرا';
+        btn.onclick = openCamera;
+        photoInput.parentNode.appendChild(btn);
+    }
+
+    const cameraArea = document.getElementById('cameraArea');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snap = document.getElementById('snap');
+    let stream = null;
+
+    async function openCamera() {
+        cameraArea.classList.remove('d-none');
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("خطأ في تشغيل الكاميرا: " + err);
+            cameraArea.classList.add('d-none');
+        }
+    }
+
+    document.getElementById('closeCamera').onclick = () => {
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        cameraArea.classList.add('d-none');
+    };
+
+    snap.addEventListener('click', () => {
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, 320, 240);
+        
+        // Convert canvas to blob and set as file
+        canvas.toBlob((blob) => {
+            const file = new File([blob], "webcam_snapshot.jpg", { type: "image/jpeg" });
+            
+            // Use DataTransfer to set file input
+            const container = new DataTransfer();
+            container.items.add(file);
+            photoInput.files = container.files;
+            
+            // Success indicator
+            alert('تم التقاط الصورة بنجاح وتعيينها للحقل');
+            
+            // Stop camera
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            cameraArea.classList.add('d-none');
+        }, 'image/jpeg');
+    });
+});
+</script>
+{% endblock %}

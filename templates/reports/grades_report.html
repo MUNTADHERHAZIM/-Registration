@@ -1,0 +1,31 @@
+{% extends 'base/base.html' %}
+{% block title %}تقرير الدرجات{% endblock %}
+{% block content %}
+<div class="fade-in">
+<div class="card mb-3"><div class="card-body py-3">
+<form method="get" class="row g-2">
+<div class="col-md-5"><select name="semester" class="form-select"><option value="">كل الفصول</option>{% for s in semesters %}<option value="{{ s.pk }}" {% if semester_filter == s.pk|stringformat:"s" %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+<div class="col-md-3"><button type="submit" class="btn btn-primary">تصفية</button></div>
+</form></div></div>
+<div class="card"><div class="card-header"><i class="fas fa-star text-primary me-2"></i>إحصاءات الدرجات</div>
+<div class="card-body p-0"><table class="table table-hover mb-0">
+<thead><tr><th>المادة</th><th>العدد</th><th>المتوسط</th><th>ناجح</th><th>راسب</th><th>نسبة النجاح</th></tr></thead>
+<tbody>
+{% for stat in section_stats %}
+<tr>
+<td><strong>{{ stat.section.course.name }}</strong></td>
+<td>{{ stat.count }}</td>
+<td><strong class="text-primary">{{ stat.avg }}</strong></td>
+<td><span class="text-success fw-bold">{{ stat.pass_count }}</span></td>
+<td><span class="text-danger fw-bold">{{ stat.fail_count }}</span></td>
+<td>
+{% if stat.count %}
+{% widthratio stat.pass_count stat.count 100 as pass_pct %}
+<div class="progress" style="height:8px;min-width:80px"><div class="progress-bar {% if pass_pct >= 70 %}bg-success{% elif pass_pct >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ pass_pct }}%"></div></div>
+<small>{{ pass_pct }}%</small>
+{% endif %}
+</td>
+</tr>
+{% empty %}<tr><td colspan="7" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>{% endfor %}
+</tbody></table></div></div>
+</div>{% endblock %}

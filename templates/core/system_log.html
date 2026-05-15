@@ -1,0 +1,84 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="fas fa-history text-primary me-2"></i>سجل عمليات النظام</h4>
+        <span class="badge bg-primary px-3 py-2">أحدث 500 عملية</span>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="logTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3" style="width: 180px;">التاريخ والوقت</th>
+                            <th class="py-3" style="width: 150px;">المستخدم</th>
+                            <th class="py-3" style="width: 120px;">الإجراء</th>
+                            <th class="py-3">التفاصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td class="px-4">
+                                <small class="text-muted fw-bold">{{ log.timestamp|date:"Y/m/d" }}</small>
+                                <div class="small text-primary">{{ log.timestamp|date:"H:i:s" }}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;font-size:12px;font-weight:bold">
+                                        {% if log.user %}
+                                            {{ log.user.username|first|upper }}
+                                        {% else %}
+                                            S
+                                        {% endif %}
+                                    </div>
+                                    <span class="fw-600">
+                                        {% if log.user %}
+                                            {{ log.user.get_full_name|default:log.user.username }}
+                                        {% else %}
+                                            نظام
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if log.action == 'create' %}bg-success{% elif log.action == 'update' %}bg-warning text-dark{% elif log.action == 'delete' %}bg-danger{% elif log.action == 'login' %}bg-info{% else %}bg-secondary{% endif %} px-2 py-1" style="min-width: 80px;">
+                                    {{ log.get_action_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-dark small fw-500">{{ log.details }}</div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="fas fa-info-circle fa-2x mb-2 d-block opacity-25"></i>
+                                لا يوجد سجلات حالياً
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#logTable').DataTable({
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json'
+        },
+        order: [[0, 'desc']],
+        pageLength: 25
+    });
+});
+</script>
+{% endblock %}

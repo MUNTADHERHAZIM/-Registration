@@ -1,0 +1,25 @@
+{% extends 'base/base.html' %}
+{% block title %}الفصول الدراسية{% endblock %}
+{% block content %}
+<div class="fade-in"><div class="card">
+<div class="card-header d-flex justify-content-between align-items-center">
+<span><i class="fas fa-calendar-week text-primary me-2"></i>الفصول الدراسية</span>
+<a href="{% url 'semester_add' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>إضافة فصل</a>
+</div>
+<div class="card-body p-0">
+<table class="table table-hover mb-0">
+<thead><tr><th>السنة الدراسية</th><th>الفصل</th><th>تاريخ البدء</th><th>تاريخ الانتهاء</th><th>التسجيل</th><th>الحالة</th></tr></thead>
+<tbody>
+{% for sem in semesters %}
+<tr>
+<td>{{ sem.academic_year.year }}</td><td class="fw-bold">{{ sem.get_name_display }}</td>
+<td>{{ sem.start_date }}</td><td>{{ sem.end_date }}</td>
+<td>{% if sem.registration_open %}<span class="badge bg-success">مفتوح</span>{% else %}<span class="badge bg-secondary">مغلق</span>{% endif %}</td>
+<td>{% if sem.is_active %}<span class="badge bg-primary">نشط</span>{% else %}<span class="badge bg-secondary">منتهي</span>{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="7" class="text-center py-4 text-muted">لا توجد فصول دراسية</td></tr>
+{% endfor %}
+</tbody></table>
+</div></div></div>
+{% endblock %}

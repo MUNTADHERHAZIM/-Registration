@@ -1,0 +1,302 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <!-- Header with Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm overflow-hidden h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="icon-box bg-primary-subtle text-primary rounded-3 p-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">{{ overall_stats.total }}</h4>
+                        <small class="text-muted">إجمالي الطلاب</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm overflow-hidden h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="icon-box bg-success-subtle text-success rounded-3 p-3">
+                        <i class="fas fa-graduation-cap fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">{{ overall_stats.avg_admission|floatformat:2 }}</h4>
+                        <small class="text-muted">متوسط معدل القبول</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm overflow-hidden h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="icon-box bg-warning-subtle text-warning rounded-3 p-3">
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">{{ dept_stats.count }}</h4>
+                        <small class="text-muted">عدد الأقسام</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm overflow-hidden h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="icon-box bg-info-subtle text-info rounded-3 p-3">
+                        <i class="fas fa-map-marker-alt fa-2x"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">{{ overall_stats.total|default:0 }}</h4>
+                        <small class="text-muted">تغطية المحافظات</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- First Row: Gender & Origins -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-venus-mars text-primary me-2"></i>توزيع الجنس</div>
+                <div class="card-body d-flex align-items-center">
+                    <canvas id="genderChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-globe text-success me-2"></i>حالة الطالب (أصيل/وافد)</div>
+                <div class="card-body d-flex align-items-center">
+                    <canvas id="originChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-sync text-warning me-2"></i>أعداد الطلاب حسب الدور</div>
+                <div class="card-body d-flex align-items-center">
+                    <canvas id="roundChart" style="max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row: Branch & Channel -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-stream text-primary me-2"></i>توزيع الفروع الدراسية</div>
+                <div class="card-body">
+                    <canvas id="branchChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-filter text-info me-2"></i>قنوات القبول الأكثر استخداماً</div>
+                <div class="card-body">
+                    <canvas id="channelChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Third Row: Governorates -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-map text-primary me-2"></i>توزيع الطلاب حسب المحافظات</div>
+                <div class="card-body">
+                    <canvas id="govChart" style="max-height: 350px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Stats Tables -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">إحصاءات الأقسام التفصيلية</span>
+                    <span class="badge bg-primary">كافة الطلاب</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>القسم</th>
+                                    <th class="text-center">الإجمالي</th>
+                                    <th class="text-center">نشط</th>
+                                    <th class="text-center">متوسط القبول</th>
+                                    <th class="text-center">متوسط التراكمي</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in dept_stats %}
+                                <tr>
+                                    <td class="fw-bold">{{ dept.name }}</td>
+                                    <td class="text-center">{{ dept.total }}</td>
+                                    <td class="text-center"><span class="badge bg-success-subtle text-success">{{ dept.active }}</span></td>
+                                    <td class="text-center fw-bold">{{ dept.avg_admission|floatformat:2|default:"0" }}</td>
+                                    <td class="text-center fw-bold text-primary">{{ dept.avg_gpa|floatformat:2|default:"0" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold">أعلى الطلاب معدلاً (قبول)</div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for s in top_students %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-dark">{{ forloop.counter }}</span>
+                                <div>
+                                    <div class="fw-bold small">{{ s.short_name }}</div>
+                                    <small class="text-muted">{{ s.department.name }}</small>
+                                </div>
+                            </div>
+                            <span class="fw-bold text-success">{{ s.admission_avg }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rawData = '{{ chart_data_json|safe }}';
+    const data = JSON.parse(rawData);
+    
+    const colors = ['#1a237e', '#3949ab', '#1b5e20', '#2e7d32', '#e65100', '#ff6f00', '#00838f', '#283593', '#4527a0', '#00695c'];
+
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
+        }
+    };
+
+    // Gender Chart
+    new Chart(document.getElementById('genderChart'), {
+        type: 'pie',
+        data: {
+            labels: data.gender.labels,
+            datasets: [{
+                data: data.gender.counts,
+                backgroundColor: ['#3949ab', '#e91e63'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: baseOptions
+    });
+
+    // Origin Chart
+    new Chart(document.getElementById('originChart'), {
+        type: 'doughnut',
+        data: {
+            labels: data.origin.labels,
+            datasets: [{
+                data: data.origin.counts,
+                backgroundColor: ['#1b5e20', '#ff9800'],
+                borderWidth: 0
+            }]
+        },
+        options: baseOptions
+    });
+
+    // Round Chart
+    new Chart(document.getElementById('roundChart'), {
+        type: 'bar',
+        data: {
+            labels: data.round.labels,
+            datasets: [{
+                label: 'عدد الطلاب',
+                data: data.round.counts,
+                backgroundColor: '#1a237e',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            ...baseOptions,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // Branch Chart
+    new Chart(document.getElementById('branchChart'), {
+        type: 'bar',
+        data: {
+            labels: data.branch.labels,
+            datasets: [{
+                label: 'عدد الطلاب',
+                data: data.branch.counts,
+                backgroundColor: '#3949ab',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            ...baseOptions,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Channel Chart
+    new Chart(document.getElementById('channelChart'), {
+        type: 'polarArea',
+        data: {
+            labels: data.channel.labels,
+            datasets: [{
+                data: data.channel.counts,
+                backgroundColor: colors.slice(0, data.channel.labels.length),
+            }]
+        },
+        options: baseOptions
+    });
+
+    // Gov Chart
+    new Chart(document.getElementById('govChart'), {
+        type: 'bar',
+        data: {
+            labels: data.gov.labels,
+            datasets: [{
+                label: 'عدد الطلاب',
+                data: data.gov.counts,
+                backgroundColor: '#1a237e',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            ...baseOptions,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+});
+</script>
+
+<style>
+    .icon-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
+    .card-header { border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .table-responsive { overflow-x: auto; }
+</style>
+{% endblock %}

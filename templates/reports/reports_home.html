@@ -1,0 +1,18 @@
+{% extends 'base/base.html' %}
+{% block title %}التقارير{% endblock %}
+{% block content %}
+<div class="fade-in">
+<div class="row g-3">
+<div class="col-md-4">
+<a href="{% url 'students_report' %}" class="stat-card d-block text-decoration-none">
+<div class="stat-icon blue"><i class="fas fa-user-graduate"></i></div>
+<div><div class="stat-number text-primary" style="font-size:20px">تقرير الطلاب</div><div class="stat-label">عرض وتصدير بيانات الطلاب PDF/Excel</div></div>
+</a></div>
+<div class="col-md-4">
+<a href="{% url 'statistics_report' %}" class="stat-card d-block text-decoration-none">
+<div class="stat-icon teal"><i class="fas fa-chart-bar"></i></div>
+<div><div class="stat-number" style="font-size:20px;color:#00897b">الإحصاءات العامة</div><div class="stat-label">إحصاءات الأقسام والمراحل والقبول</div></div>
+</a></div>
+</div>
+</div>
+{% endblock %}

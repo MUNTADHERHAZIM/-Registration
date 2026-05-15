@@ -1,0 +1,16 @@
+{% extends 'base/base.html' %}
+{% block title %}حذف قسم{% endblock %}
+{% block content %}
+<div style="max-width:500px;margin:0 auto">
+<div class="card border-danger">
+    <div class="card-header bg-danger text-white">تأكيد حذف القسم</div>
+    <div class="card-body text-center py-4">
+        <p>هل تريد حذف قسم <strong>{{ dept.name }}</strong>؟</p>
+        <form method="post" class="d-flex gap-2 justify-content-center">{% csrf_token %}
+            <button class="btn btn-danger">تأكيد الحذف</button>
+            <a href="{% url 'department_list' %}" class="btn btn-secondary">إلغاء</a>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}

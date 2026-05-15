@@ -1,0 +1,30 @@
+{% extends 'base/base.html' %}
+{% block title %}السنوات الدراسية{% endblock %}
+{% block content %}
+<div class="fade-in">
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-calendar-alt text-primary me-2"></i>السنوات الدراسية</span>
+        <a href="{% url 'academic_year_add' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>إضافة سنة</a>
+    </div>
+    <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+        <thead><tr><th>السنة</th><th>تاريخ البدء</th><th>تاريخ الانتهاء</th><th>الطلاب</th><th>الحالة</th></tr></thead>
+        <tbody>
+        {% for year in years %}
+        <tr>
+            <td class="fw-bold">{{ year.year }}</td>
+            <td>{{ year.start_date }}</td>
+            <td>{{ year.end_date }}</td>
+            <td>{{ year.student_count }}</td>
+            <td>{% if year.is_active %}<span class="badge bg-success">نشطة</span>{% else %}<span class="badge bg-secondary">غير نشطة</span>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center py-4 text-muted">لا توجد سنوات دراسية</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>
+{% endblock %}

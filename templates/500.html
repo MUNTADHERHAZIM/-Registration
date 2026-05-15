@@ -1,0 +1,29 @@
+{% extends 'services/public_base.html' %}
+
+{% block title %}خطأ في الخادم - 500{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="display-1 fw-bold text-danger mb-4 fade-in">500</div>
+            <h2 class="h3 mb-4 fade-in" style="animation-delay:0.1s;">عذراً، حدث خطأ تقني غير متوقع</h2>
+            <p class="text-muted mb-5 fade-in" style="animation-delay:0.2s;">
+                نواجه مشكلة في معالجة طلبك حالياً. فريقنا التقني سيعمل على حل المشكلة بأقرب وقت. 
+                يرجى المحاولة مرة أخرى لاحقاً.
+            </p>
+            <div class="fade-in" style="animation-delay:0.3s;">
+                <a href="{% url 'services_home_public' %}" class="btn btn-accent btn-lg px-5">
+                    <i class="fas fa-redo me-2"></i>تحديث الصفحة
+                </a>
+            </div>
+            
+            <div class="mt-5 pt-5 fade-in" style="animation-delay:0.4s;">
+                <div class="display-1 text-light opacity-10">
+                    <i class="fas fa-tools"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

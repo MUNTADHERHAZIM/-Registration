@@ -1,0 +1,41 @@
+{% extends 'base/base.html' %}
+{% block title %}المستخدمون{% endblock %}
+{% block content %}
+<div class="fade-in">
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-users-cog text-primary me-2"></i>إدارة المستخدمين</span>
+        <a href="{% url 'user_add' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>مستخدم جديد</a>
+    </div>
+    <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+        <thead><tr><th>المستخدم</th><th>الاسم الكامل</th><th>البريد</th><th>الصلاحية</th><th>آخر دخول</th><th>الحالة</th><th class="text-center">إجراءات</th></tr></thead>
+        <tbody>
+        {% for u in users %}
+        <tr>
+            <td><code>{{ u.username }}</code></td>
+            <td>{{ u.get_full_name|default:"—" }}</td>
+            <td>{{ u.email|default:"—" }}</td>
+            <td>
+                {% if u.is_superuser %}<span class="badge bg-danger">مدير كامل</span>
+                {% elif u.is_staff %}<span class="badge bg-warning text-dark">موظف</span>
+                {% else %}<span class="badge bg-secondary">مستخدم</span>{% endif %}
+            </td>
+            <td><small>{{ u.last_login|date:"Y/m/d H:i"|default:"لم يدخل" }}</small></td>
+            <td>{% if u.is_active %}<span class="badge bg-success">نشط</span>{% else %}<span class="badge bg-secondary">معطّل</span>{% endif %}</td>
+            <td class="text-center">
+                <a href="{% url 'user_edit' u.pk %}" class="btn btn-sm btn-outline-primary" title="تعديل"><i class="fas fa-edit"></i></a>
+                {% if u != user %}
+                <a href="{% url 'user_delete' u.pk %}" class="btn btn-sm btn-outline-danger" title="حذف"><i class="fas fa-trash"></i></a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center py-4 text-muted">لا يوجد مستخدمون</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>
+{% endblock %}

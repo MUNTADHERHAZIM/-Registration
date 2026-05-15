@@ -1,0 +1,42 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="mb-4 text-primary text-center"><i class="fas fa-book-open me-2"></i>{{ title }}</h2>
+            
+            {% if guides %}
+                {% for guide in guides %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">{{ guide.title }}</h4>
+                        <small>آخر تحديث: {{ guide.updated_at|date:"Y-m-d" }}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="guide-content lh-lg">
+                            {{ guide.content|safe }}
+                        </div>
+                        
+                        {% if guide.pdf_file %}
+                        <hr>
+                        <div class="text-center mt-3">
+                            <a href="{{ guide.pdf_file.url }}" class="btn btn-outline-danger btn-lg" target="_blank">
+                                <i class="fas fa-file-pdf me-2"></i> تحميل ملف التعليمات (PDF)
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h5>لا توجد تعليمات أو ضوابط للقبول حالياً.</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

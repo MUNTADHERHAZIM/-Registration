@@ -1,0 +1,265 @@
+{% extends 'base/base.html' %}
+{% block title %}ترحيل وترقية الطلاب{% endblock %}
+{% block page_title %}ترحيل وترقية الطلاب{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">ترحيل الطلاب</li>{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Quick Statistics for Promotion -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div class="stat-details">
+                    <div class="stat-number">{{ students|length }}</div>
+                    <div class="stat-label">طالب متاح للترحيل</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-details">
+                    <div class="stat-number" id="statsSelectionCount">0</div>
+                    <div class="stat-label">طالب تم اختياره</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar: Configuration -->
+        <div class="col-lg-4">
+            <!-- Step 1: Filter Selection -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <span><i class="fas fa-filter text-primary me-2"></i>1. تحديد المجموعة</span>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">القسم الدراسي</label>
+                            <select name="department" class="form-select select2" onchange="this.form.submit()">
+                                <option value="">كل الأقسام</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.pk }}" {% if request.GET.department == dept.pk|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">المرحلة الدراسية الحالية</label>
+                            <select name="level" class="form-select" onchange="this.form.submit()">
+                                <option value="">كل المراحل</option>
+                                {% for val, name in level_choices %}
+                                <option value="{{ val }}" {% if request.GET.level == val %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Step 2: Promotion Actions -->
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <span><i class="fas fa-bolt me-2"></i>2. إعدادات الترحيل</span>
+                </div>
+                <div class="card-body">
+                    <form id="promotionForm" method="post" action="{% url 'student_promote' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">الترحيل إلى المرحلة</label>
+                            <select name="to_level" class="form-select" required>
+                                {% for val, name in level_choices %}
+                                <option value="{{ val }}">{{ name }}</option>
+                                {% endfor %}
+                                <option value="graduated">تخرج (Graduated)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">للسنة الدراسية الجديدة</label>
+                            <select name="academic_year" class="form-select" required>
+                                {% for year in academic_years %}
+                                <option value="{{ year.pk }}" {% if year.is_active %}selected{% endif %}>{{ year.year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">حالة النتيجة النهائية</label>
+                            <select name="result" class="form-select" required>
+                                {% for val, name in result_choices %}
+                                <option value="{{ val }}">{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ملاحظات إضافية (اختياري)</label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="أدخل أي ملاحظات حول ترحيل هذه المجموعة..."></textarea>
+                        </div>
+                        
+                        <div id="selectedStudentsIds"></div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" onclick="return confirmPromotion()">
+                                <i class="fas fa-shipping-fast me-2"></i>بدأ عملية الترحيل
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Area: Student Selection -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span><i class="fas fa-users text-primary me-2"></i>قائمة الطلاب المتاحين</span>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="badge bg-primary-light text-primary py-2 px-3 rounded-pill">
+                            المختارين: <span id="selectionCount" class="fw-bold">0</span>
+                        </div>
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" id="selectAll">
+                            <label class="form-check-label small fw-bold" for="selectAll">تحديد الكل</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 750px;">
+                        <table class="table table-hover align-middle mb-0" id="promotionTable">
+                            <thead class="bg-light sticky-top" style="z-index: 10;">
+                                <tr>
+                                    <th style="width: 60px" class="text-center">#</th>
+                                    <th>الطالب والمعلومات الأساسية</th>
+                                    <th>الرقم الجامعي</th>
+                                    <th>المرحلة الحالية</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr class="student-row">
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input type="checkbox" name="student_chk" value="{{ student.pk }}" class="form-check-input student-checkbox shadow-none">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="user-avatar" style="width: 40px; height: 40px; font-size: 14px;">
+                                                {{ student.short_name|first|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ student.short_name }}</div>
+                                                <div class="text-muted small">{{ student.department.name|default:"بدون قسم" }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-primary border fw-bold">{{ student.student_id }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge status-active">{{ student.get_level_display }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="fas fa-user-slash fa-3x mb-3 opacity-25"></i>
+                                            <h5>لا يوجد طلاب مطابقين</h5>
+                                            <p class="small">يرجى تغيير خيارات الفلترة لعرض الطلاب المتاحين للترحيل</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .student-row.selected {
+        background-color: rgba(37, 99, 235, 0.05) !important;
+    }
+    .sticky-top {
+        top: -1px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    #promotionTable thead th {
+        border-bottom: 2px solid var(--border);
+        padding: 16px;
+        font-weight: 700;
+        color: var(--secondary);
+    }
+    #promotionTable tbody td {
+        padding: 16px;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    const selectionCount = document.getElementById('selectionCount');
+    const statsCount = document.getElementById('statsSelectionCount');
+    const hiddenContainer = document.getElementById('selectedStudentsIds');
+
+    function updateCount() {
+        const checked = document.querySelectorAll('.student-checkbox:checked');
+        selectionCount.textContent = checked.length;
+        statsCount.textContent = checked.length;
+        
+        // Highlight rows
+        document.querySelectorAll('.student-row').forEach(row => {
+            const chk = row.querySelector('.student-checkbox');
+            if (chk.checked) {
+                row.classList.add('selected');
+            } else {
+                row.classList.remove('selected');
+            }
+        });
+
+        // Clear hidden inputs
+        hiddenContainer.innerHTML = '';
+        checked.forEach(chk => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'student_ids';
+            input.value = chk.value;
+            hiddenContainer.appendChild(input);
+        });
+    }
+
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(chk => {
+            chk.checked = selectAll.checked;
+        });
+        updateCount();
+    });
+
+    checkboxes.forEach(chk => {
+        chk.addEventListener('change', updateCount);
+    });
+});
+
+function confirmPromotion() {
+    const count = document.querySelectorAll('.student-checkbox:checked').length;
+    if (count === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'تنبيه',
+            text: 'يرجى تحديد طلاب أولاً للقيام بعملية الترحيل',
+            confirmButtonText: 'حسناً'
+        });
+        return false;
+    }
+    const toLevelName = document.querySelector('select[name="to_level"] option:checked').text;
+    return confirm(`هل أنت متأكد من ترحيل ${count} طلاب إلى ${toLevelName}؟`);
+}
+</script>
+{% endblock %}

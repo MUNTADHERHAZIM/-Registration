@@ -1,0 +1,290 @@
+{% extends 'services/public_base.html' %}
+{% block title %}تقديم طلب جديد{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width:860px;margin:0 auto;">
+    <!-- Header -->
+    <div class="page-header text-center mb-4">
+        <h2><i class="fas fa-paper-plane me-2"></i>تقديم طلب جديد</h2>
+        <p class="text-muted">املأ النموذج أدناه وسيتم معالجة طلبك في أقرب وقت</p>
+    </div>
+
+    <div class="glass-card">
+        <form method="post" enctype="multipart/form-data" id="requestForm" novalidate>
+            {% csrf_token %}
+
+            <!-- Step indicator -->
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-4 pb-3" style="border-bottom:2px solid #f0f0f0;">
+                <span class="badge bg-primary" style="padding:6px 14px;font-size:13px;">
+                    <i class="fas fa-list-check me-1"></i>نوع الطلب
+                </span>
+                <i class="fas fa-chevron-left text-muted small mx-1"></i>
+                <span class="badge bg-primary" style="padding:6px 14px;font-size:13px;">
+                    <i class="fas fa-user me-1"></i>بياناتك
+                </span>
+                <i class="fas fa-chevron-left text-muted small mx-1"></i>
+                <span class="badge bg-primary" style="padding:6px 14px;font-size:13px;">
+                    <i class="fas fa-paperclip me-1"></i>المرفقات
+                </span>
+            </div>
+
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>يرجى تصحيح الأخطاء التالية:</strong>
+                <ul class="mb-0 mt-2">
+                    {% for field in form %}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Request Type -->
+            <div class="mb-4">
+                <h6 class="fw-bold mb-3" style="color:var(--primary);"><i class="fas fa-list-check me-2"></i>نوع الطلب</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">نوع الطلب <span class="text-danger">*</span></label>
+                        {{ form.request_type }}
+                        {% if form.request_type.errors %}<div class="text-danger small mt-1">{{ form.request_type.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">المرحلة الدراسية</label>
+                        {{ form.level }}
+                        {% if form.level.errors %}<div class="text-danger small mt-1">{{ form.level.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#e0e0e0;">
+
+            <!-- Section 2: Student Info -->
+            <div class="mb-4">
+                <h6 class="fw-bold mb-3" style="color:var(--primary);"><i class="fas fa-user me-2"></i>البيانات الشخصية</h6>
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label">الاسم الرباعي <span class="text-danger">*</span></label>
+                        {{ form.student_name }}
+                        {% if form.student_name.errors %}<div class="text-danger small mt-1">{{ form.student_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">الرقم الجامعي</label>
+                        {{ form.student_id_number }}
+                        {% if form.student_id_number.errors %}<div class="text-danger small mt-1">{{ form.student_id_number.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">رقم الهوية الوطنية</label>
+                        {{ form.national_id }}
+                        {% if form.national_id.errors %}<div class="text-danger small mt-1">{{ form.national_id.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">رقم الهاتف <span class="text-danger">*</span></label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">القسم</label>
+                        {{ form.department }}
+                        {% if form.department.errors %}<div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#e0e0e0;">
+
+            <!-- Section 3: Details -->
+            <div class="mb-4">
+                <h6 class="fw-bold mb-3" style="color:var(--primary);"><i class="fas fa-align-right me-2"></i>تفاصيل الطلب</h6>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">التفاصيل والملاحظات</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color:#e0e0e0;">
+
+            <!-- Section 4: Attachments & Webcam -->
+            <div class="mb-4">
+                <h6 class="fw-bold mb-3" style="color:var(--primary);"><i class="fas fa-paperclip me-2"></i>المرفقات والصور</h6>
+
+                <div class="row g-3">
+                    <!-- File upload -->
+                    <div class="col-md-6">
+                        <label class="form-label">رفع ملف أو صورة</label>
+                        {{ form.attachment }}
+                        <small class="text-muted d-block mt-1">يقبل: صور، PDF، Word (حد أقصى 10MB)</small>
+                        <div id="filePreview" class="mt-2" style="display:none;">
+                            <img id="filePreviewImg" src="" class="webcam-preview" alt="معاينة">
+                        </div>
+                    </div>
+
+                    <!-- Webcam capture -->
+                    <div class="col-md-6">
+                        <label class="form-label">التقاط صورة من الكاميرا</label>
+                        <div class="webcam-container" id="webcamContainer">
+                            <div id="webcamOff">
+                                <div style="font-size:48px;color:#bdbdbd;margin-bottom:12px;">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="startCameraBtn">
+                                    <i class="fas fa-video me-1"></i>تشغيل الكاميرا
+                                </button>
+                            </div>
+                            <div id="webcamOn" style="display:none;">
+                                <video id="webcamVideo" autoplay playsinline></video>
+                                <canvas id="webcamCanvas"></canvas>
+                                <div class="mt-3 d-flex gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-primary btn-sm" id="captureBtn">
+                                        <i class="fas fa-camera me-1"></i>التقاط صورة
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="retakeBtn" style="display:none;">
+                                        <i class="fas fa-redo me-1"></i>إعادة
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" id="stopCameraBtn">
+                                        <i class="fas fa-stop me-1"></i>إيقاف
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="webcamPreviewArea" style="display:none;">
+                                <img id="capturedImage" src="" class="webcam-preview" alt="الصورة الملتقطة">
+                                <div class="mt-2">
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>تم التقاط الصورة</span>
+                                    <button type="button" class="btn btn-outline-warning btn-sm ms-2" id="retakeBtn2">
+                                        <i class="fas fa-redo me-1"></i>إعادة التقاط
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {{ form.webcam_data }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="text-center pt-3" style="border-top:2px solid #f0f0f0;">
+                <button type="submit" class="btn btn-accent btn-lg px-5">
+                    <i class="fas fa-paper-plane me-2"></i>تقديم الطلب
+                </button>
+                <div class="mt-2">
+                    <small class="text-muted">بالضغط على "تقديم" فإنك توافق على صحة البيانات المدخلة</small>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function(){
+    // Pre-select type from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const preType = urlParams.get('type');
+    if(preType){
+        $('#id_request_type').val(preType).trigger('change');
+    }
+
+    // File preview
+    $('input[type="file"]').on('change', function(e){
+        const file = e.target.files[0];
+        if(file && file.type.startsWith('image/')){
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                $('#filePreviewImg').attr('src', ev.target.result);
+                $('#filePreview').show();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#filePreview').hide();
+        }
+    });
+
+    // ===== WEBCAM FUNCTIONALITY =====
+    let stream = null;
+    const video = document.getElementById('webcamVideo');
+    const canvas = document.getElementById('webcamCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+
+    // Start camera
+    $('#startCameraBtn').on('click', async function(){
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: {ideal:640}, height: {ideal:480} },
+                audio: false
+            });
+            video.srcObject = stream;
+            $('#webcamOff').hide();
+            $('#webcamOn').show();
+            $('#webcamPreviewArea').hide();
+            $('#webcamContainer').addClass('active');
+        } catch(err) {
+            alert('لا يمكن الوصول إلى الكاميرا. يرجى السماح بالوصول من المتصفح.\n\n' + err.message);
+        }
+    });
+
+    // Capture photo
+    $('#captureBtn').on('click', function(){
+        if(!video.videoWidth) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        const dataURL = canvas.toDataURL('image/jpeg', 0.85);
+        $('#capturedImage').attr('src', dataURL);
+        $('#id_webcam_data').val(dataURL);
+        // Stop camera
+        if(stream) {
+            stream.getTracks().forEach(t => t.stop());
+            stream = null;
+        }
+        $('#webcamOn').hide();
+        $('#webcamPreviewArea').show();
+    });
+
+    // Retake
+    $('#retakeBtn, #retakeBtn2').on('click', async function(){
+        $('#id_webcam_data').val('');
+        $('#webcamPreviewArea').hide();
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: {ideal:640}, height: {ideal:480} },
+                audio: false
+            });
+            video.srcObject = stream;
+            $('#webcamOn').show();
+        } catch(err) {
+            $('#webcamOff').show();
+        }
+    });
+
+    // Stop camera
+    $('#stopCameraBtn').on('click', function(){
+        if(stream) {
+            stream.getTracks().forEach(t => t.stop());
+            stream = null;
+        }
+        video.srcObject = null;
+        $('#webcamOn').hide();
+        $('#webcamOff').show();
+        $('#webcamContainer').removeClass('active');
+    });
+});
+</script>
+{% endblock %}

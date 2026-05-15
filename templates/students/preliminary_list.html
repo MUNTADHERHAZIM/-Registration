@@ -1,0 +1,100 @@
+{% extends 'base/base.html' %}
+{% block title %}التقديم الأولي{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">التقديم الأولي</li>{% endblock %}
+{% block content %}
+<div class="fade-in">
+<!-- Filter & Search Bar -->
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-9">
+                <div class="search-box">
+                    <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="بحث بالاسم أو الرقم الجامعي المؤقت...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="fas fa-search me-1"></i>بحث</button>
+                <a href="{% url 'preliminary_list' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<form action="{% url 'activate_students' %}" method="post" id="activateForm">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-user-clock text-warning me-2"></i>
+            طلبات التقديم الأولي <span class="badge bg-warning ms-1">{{ students.count }}</span></span>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('هل أنت متأكد من تثبيت مباشرة الطلاب المحددين؟')">
+                    <i class="fas fa-user-check me-1"></i>تثبيت مباشرة (المختارين)
+                </button>
+                <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>إضافة تقديم جديد
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                            <th>الطالب</th>
+                            <th>الرقم الجامعي</th>
+                            <th>القسم</th>
+                            <th>سنة التخرج</th>
+                            <th>رقم الهاتف</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td><input type="checkbox" name="student_ids" value="{{ student.pk }}" class="form-check-input student-chk"></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="student-avatar">{{ student.first_name|first }}{{ student.last_name|first }}</div>
+                                    <div>
+                                        <a href="{% url 'student_detail' student.pk %}" class="fw-600 text-decoration-none text-dark">{{ student.short_name }}</a>
+                                        <br><small class="text-muted">{{ student.created_at|date:"Y-m-d" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><code class="text-primary">{{ student.student_id }}</code></td>
+                            <td>{{ student.department.name }}</td>
+                            <td>{{ student.grad_year_str|default:"—" }}</td>
+                            <td>{{ student.phone|default:"—" }}</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'student_detail' student.pk %}" class="btn btn-outline-primary btn-sm" title="عرض"><i class="fas fa-eye"></i></a>
+                                    <a href="{% url 'student_edit' student.pk %}" class="btn btn-outline-warning btn-sm" title="مباشرة/تعديل"><i class="fas fa-user-check"></i></a>
+                                    <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline-danger btn-sm" title="حذف"><i class="fas fa-trash"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-clock fa-3x text-muted mb-3 d-block"></i>
+                                <div class="text-muted">لا توجد طلبات تقديم أولية حالياً</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
+
+<script>
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.student-chk');
+    checkboxes.forEach(chk => chk.checked = this.checked);
+});
+</script>
+{% endblock %}

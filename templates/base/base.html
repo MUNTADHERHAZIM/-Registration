@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title|default:"نظام شؤون الطلاب" }}{% endblock %} | الجامعة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: {{ sys_settings.header_color|default:"#2563eb" }};
+            --primary-dark: #1e40af;
+            --primary-light: #60a5fa;
+            --secondary: #64748b;
+            --success: #10b981;
+            --info: #0ea5e9;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 85px;
+            --topbar-height: 70px;
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        /* ===== SIDEBAR ===== */
+        #sidebar {
+            position: fixed; top: 0; right: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            z-index: 1001;
+            transition: var(--transition);
+            box-shadow: -4px 0 10px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+        }
+        #sidebar.collapsed { width: var(--sidebar-collapsed); }
+        .sidebar-brand {
+            padding: 20px;
+            display: flex; align-items: center; gap: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            text-decoration: none; color: white;
+            min-height: var(--topbar-height);
+        }
+        .sidebar-brand .brand-icon {
+            width: 42px; height: 42px; min-width: 42px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .brand-text { transition: opacity 0.3s; white-space: nowrap; }
+        #sidebar.collapsed .brand-text { opacity: 0; pointer-events: none; }
+        .brand-text h5 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.025em; }
+        .brand-text small { font-size: 11px; color: #94a3b8; opacity: 0.6; font-weight: 500; }
+        .sidebar-nav { padding: 20px 12px; overflow-y: auto; flex: 1; }
+        .nav-section-title {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #475569;
+            padding: 12px 16px 8px;
+        }
+        #sidebar.collapsed .nav-section-title { display: none; }
+
+        .nav-item-link {
+            display: flex; align-items: center; gap: 14px;
+            padding: 12px 16px; margin-bottom: 4px;
+            border-radius: 12px; color: #94a3b8;
+            text-decoration: none; font-weight: 600; font-size: 14px;
+            transition: var(--transition);
+        }
+        .nav-item-link:hover {
+            background: var(--sidebar-hover);
+            color: white;
+        }
+        .nav-item-link.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .nav-icon {
+            width: 24px; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #sidebar.collapsed .nav-item-link span { display: none; }
+        /* ===== SELECT2 OVERRIDES ===== */
+        .select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--primary-light) !important;
+            color: white !important;
+        }
+        .select2-container--bootstrap-5 .select2-results__option[aria-selected="true"] {
+            background-color: #e3f2fd !important;
+            color: var(--primary) !important;
+            font-weight: 600;
+        }
+        /* ===== TOPBAR ===== */
+        #topbar {
+            position: fixed; top: 0; left: 0;
+            right: var(--sidebar-width);
+            height: var(--topbar-height);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex; align-items: center;
+            padding: 0 24px; gap: 20px;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        #topbar.expanded { right: var(--sidebar-collapsed); }
+        
+        .topbar-toggle {
+            width: 42px; height: 42px;
+            background: white; border: 1px solid var(--border); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--secondary); font-size: 18px;
+            transition: var(--transition);
+            box-shadow: var(--card-shadow);
+        }
+        .topbar-toggle:hover { 
+            background: var(--bg); color: var(--primary);
+            border-color: var(--primary-light);
+        }
+
+        .page-title { flex: 1; display: flex; align-items: center; gap: 20px; }
+        .page-title h4 { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; }
+        
+        .global-search {
+            max-width: 450px; width: 100%;
+        }
+        .global-search form {
+            position: relative; width: 100%;
+        }
+        .global-search input {
+            width: 100%; height: 44px;
+            padding: 0 46px 0 16px;
+            background: #f1f5f9; border: 1px solid transparent;
+            border-radius: 14px; font-size: 14px; font-weight: 500;
+            transition: var(--transition);
+        }
+        .global-search input:focus {
+            background: white; border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+        .global-search .search-icon {
+            position: absolute; right: 18px; top: 50%;
+            transform: translateY(-50%); color: var(--secondary);
+            font-size: 16px; pointer-events: none;
+            z-index: 5;
+        }
+        .topbar-actions { display: flex; align-items: center; gap: 12px; }
+        .user-profile {
+            display: flex; align-items: center; gap: 12px;
+            padding: 6px 12px; border-radius: 14px;
+            cursor: pointer; transition: var(--transition);
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .user-profile:hover { background: #f1f5f9; border-color: var(--border); }
+        .user-avatar {
+            width: 40px; height: 40px;
+            border-radius: 12px; background: var(--primary);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+        .user-info { display: flex; flex-direction: column; line-height: 1.2; text-align: right; }
+        .user-name { font-size: 14px; font-weight: 800; color: #0f172a; }
+        .user-role { font-size: 11px; font-weight: 600; color: var(--secondary); }
+        /* ===== MAIN CONTENT ===== */
+        #main-content {
+            margin-right: var(--sidebar-width);
+            padding-top: var(--topbar-height);
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+        #main-content.expanded { margin-right: var(--sidebar-collapsed); }
+        .content-wrapper { padding: 32px; max-width: 100%; margin: 0; }
+
+        /* ===== CARDS & UI ===== */
+        .card {
+            background: white; border: 1px solid var(--border);
+            border-radius: 20px; box-shadow: var(--card-shadow);
+            transition: var(--transition); overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
+        .card-header {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 20px 24px; font-weight: 800; color: #0f172a;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-body { padding: 24px; }
+        /* ===== STAT CARDS ===== */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex; align-items: center; gap: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            text-decoration: none; color: inherit;
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); color: inherit; }
+        .stat-icon {
+            width: 60px; height: 60px; min-width: 60px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: white;
+        }
+        .stat-icon.blue { background: linear-gradient(135deg, #1a237e, #3949ab); }
+        .stat-icon.green { background: linear-gradient(135deg, #1b5e20, #2e7d32); }
+        .stat-icon.orange { background: linear-gradient(135deg, #e65100, #ff6f00); }
+        .stat-icon.teal { background: linear-gradient(135deg, #004d40, #00897b); }
+        .stat-icon.red { background: linear-gradient(135deg, #b71c1c, #c62828); }
+        .stat-icon.purple { background: linear-gradient(135deg, #4a148c, #7b1fa2); }
+        .stat-number { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: var(--text-muted); }
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: auto;
+            padding: 24px 32px;
+            background: white;
+            border-top: 1px solid var(--border);
+            color: var(--secondary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .footer-info { display: flex; align-items: center; gap: 24px; }
+        .footer-info a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .footer-info a:hover { text-decoration: underline; }
+        .dev-info { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+        .dev-info i { color: var(--primary); }
+
+        /* ===== PAGINATION FIX ===== */
+        .pagination { gap: 8px; margin-bottom: 0; }
+        .page-item .page-link {
+            border: 1px solid var(--border);
+            border-radius: 10px !important;
+            padding: 8px 16px;
+            color: var(--text);
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+            min-width: 40px; height: 40px;
+        }
+        .page-item.active .page-link {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .page-item.disabled .page-link {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+        .page-item .page-link:hover:not(.active) {
+            background: #f1f5f9;
+            border-color: var(--primary-light);
+            color: var(--primary);
+        }
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+            padding: 12px 16px;
+            white-space: nowrap;
+        }
+        .table tbody td { padding: 12px 16px; vertical-align: middle; border-color: var(--border); }
+        .table tbody tr:hover { background: #f8f9ff; }
+        /* ===== BUTTONS ===== */
+        .btn { border-radius: 10px; font-family: 'Cairo', sans-serif; font-weight: 600; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-light); border-color: var(--primary-light); }
+        .btn-sm { font-size: 12px; padding: 4px 10px; border-radius: 7px; }
+        /* ===== FORM CONTROLS ===== */
+        .form-control, .form-select {
+            border-radius: 10px; font-family: 'Cairo', sans-serif;
+            border: 1.5px solid var(--border); font-size: 14px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(57,73,171,0.15);
+        }
+        .form-label { font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+        /* ===== BADGES ===== */
+        .badge { font-family: 'Cairo', sans-serif; font-size: 11px; border-radius: 6px; padding: 4px 8px; }
+        /* ===== ALERTS ===== */
+        .alert { border-radius: 12px; border: none; font-size: 14px; }
+        /* ===== PAGINATION ===== */
+        /* ===== SEARCH BOX ===== */
+        /* ===== AVATAR ===== */
+        .student-avatar {
+            width: 40px; height: 40px; min-width: 40px;
+            border-radius: 10px; object-fit: cover;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 14px;
+        }
+        /* ===== STATUS BADGES ===== */
+        .status-active { background: #9fe6a4; color: #2e7d32; }
+        .status-suspended { background: #ddc399; color: #9c570b; }
+        .status-graduated { background: #95c5e7; color: #1565c0; }
+        .status-withdrawn { background: #fdc2e2; color: #c62828; }
+        .status-initial { background: #e9d5ff; color: #6b21a8; }
+        .status-transferred { background: #fef08a; color: #854d0e; }
+        /* ===== GPA PROGRESS ===== */
+        .gpa-bar { height: 6px; border-radius: 3px; background: var(--border); }
+        .gpa-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #sidebar { width: 0; }
+            #sidebar.mobile-open { width: var(--sidebar-width); }
+            #sidebar.mobile-open ~ #main-content::after {
+                content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5); z-index: 998;
+            }
+            #topbar { right: 0 !important; }
+            #main-content { margin-right: 0 !important; padding: 16px; }
+            .sidebar-brand .brand-icon { width: 32px; height: 32px; font-size: 14px; }
+        }
+
+        @media (max-width: 992px) {
+            .footer { flex-direction: column; gap: 16px; text-align: center; }
+            .footer-info { flex-direction: column; gap: 8px; }
+            .dev-info { flex-direction: column; }
+        }
+        /* ===== PRINT ===== */
+        @media print {
+            #sidebar, #topbar { display: none !important; }
+            #main-content { margin: 0 !important; padding: 0 !important; }
+        }
+        /* ===== ANIMATIONS ===== */
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* ===== CHART CONTAINER ===== */
+        .chart-container { position: relative; height: 280px; }
+        /* ===== DROPDOWN ===== */
+        .dropdown-menu { border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-family: 'Cairo', sans-serif; }
+        .dropdown-item { font-size: 13px; padding: 8px 16px; }
+        .dropdown-item:hover { background: #f0f2f8; }
+        /* ===== SELECT2 ===== */
+        .select2-container { width: 100% !important; }
+        .select2-container--bootstrap-5 .select2-selection {
+            border-radius: 10px !important;
+            border: 1.5px solid var(--border) !important;
+            min-height: 38px !important;
+            font-family: 'Cairo', sans-serif !important;
+        }
+        .select2-container--bootstrap-5.select2-container--focus .select2-selection {
+            border-color: var(--primary-light) !important;
+            box-shadow: 0 0 0 3px rgba(57,73,171,0.15) !important;
+        }
+        .select2-dropdown { border-radius: 10px !important; overflow: hidden; font-family: 'Cairo', sans-serif !important; }
+        .select2-results__option { padding: 8px 12px !important; font-size: 13px !important; }
+        .select2-results__option--highlighted { background: var(--primary) !important; }
+        .select2-search--dropdown .select2-search__field {
+            border-radius: 8px !important; font-family: 'Cairo', sans-serif !important;
+        }
+        .select2-container { z-index: 9999 !important; }
+        .select2-dropdown { z-index: 9999 !important; }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
+            margin-right: 10px; margin-top: 2px;
+        }
+        /* Fix for FontAwesome icons in cards */
+        .card-header i { vertical-align: middle; }
+
+        /* ===== MANDATORY FIELDS ===== */
+        .asteriskField { color: var(--danger); font-weight: bold; margin-right: 4px; }
+        .requiredField:after { content: ' *'; color: var(--danger); font-weight: bold; }
+        label.required:after { content: ' *'; color: var(--danger); font-weight: bold; }
+
+        /* ===== GLOBAL SEARCH ===== */
+        .global-search {
+            position: relative; width: 300px; max-width: 100%;
+        }
+        .global-search .form-control {
+            border-radius: 20px; padding-right: 40px; background: var(--bg); border: none;
+            height: 38px; font-size: 13px;
+        }
+        .global-search .form-control:focus {
+            background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 400px;
+        }
+        .global-search i {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);
+        }
+        @media (max-width: 992px) {
+            .global-search { display: none; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+    <div class="d-flex justify-content-between align-items-center d-md-none p-3 border-bottom border-white-50">
+        <span class="text-white fw-bold">القائمة</span>
+        <button class="btn btn-sm text-white border-0" id="closeSidebar"><i class="fas fa-times fa-lg"></i></button>
+    </div>
+    <a class="sidebar-brand" href="{% url 'dashboard' %}">
+        <div class="brand-icon">
+            {% if sys_settings.logo %}
+                <img src="{{ sys_settings.logo.url }}" style="width: 32px; height: 32px; object-fit: contain;">
+            {% else %}
+                <i class="fas fa-university"></i>
+            {% endif %}
+        </div>
+        <div class="brand-text">
+            <h5>{{ sys_settings.university_name }}</h5>
+            <small>{{ sys_settings.college_name|default:"إدارة التسجيل الجامعي" }}</small>
+        </div>
+    </a>
+    <div class="sidebar-nav">
+        <div class="nav-section-title">الرئيسية</div>
+        <a href="{% url 'dashboard' %}" class="nav-item-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-chart-pie"></i></div>
+            <span>لوحة التحكم</span>
+        </a>
+
+        <div class="nav-section-title">إدارة الطلاب</div>
+        <a href="{% url 'student_list' %}" class="nav-item-link {% if 'student' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-user-graduate"></i></div>
+            <span>الطلاب</span>
+        </a>
+        <a href="{% url 'student_add' %}" class="nav-item-link">
+            <div class="nav-icon"><i class="fas fa-user-plus"></i></div>
+            <span>إضافة طالب</span>
+        </a>
+        <a href="{% url 'department_list' %}" class="nav-item-link {% if 'department' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-building"></i></div>
+            <span>الأقسام</span>
+        </a>
+        <a href="{% url 'preliminary_list' %}" class="nav-item-link {% if 'preliminary' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-user-clock"></i></div>
+            <span>التقديم الأولي</span>
+        </a>
+        <a href="{% url 'student_promote' %}" class="nav-item-link {% if 'promote' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-arrow-circle-right"></i></div>
+            <span>ترحيل الطلاب</span>
+        </a>
+
+
+        <div class="nav-section-title">التقارير</div>
+        <a href="{% url 'reports_home' %}" class="nav-item-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-file-alt"></i></div>
+            <span>التقارير</span>
+        </a>
+        <a href="{% url 'statistics_report' %}" class="nav-item-link">
+            <div class="nav-icon"><i class="fas fa-chart-bar"></i></div>
+            <span>الإحصاءات</span>
+        </a>
+        <a href="{% url 'admin_performance' %}" class="nav-item-link {% if request.resolver_match.url_name == 'admin_performance' %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+            <span>الأداء الإداري</span>
+        </a>
+
+        <div class="nav-section-title">خدمات الطلاب</div>
+        <a href="{% url 'manage_requests' %}" class="nav-item-link {% if 'request' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-headset"></i></div>
+            <span>إدارة الطلبات</span>
+        </a>
+        <a href="{% url 'services_home_public' %}" class="nav-item-link" target="_blank">
+            <div class="nav-icon"><i class="fas fa-external-link-alt"></i></div>
+            <span>بوابة الطلاب</span>
+        </a>
+
+        <div class="nav-section-title">الإعدادات</div>
+        <a href="{% url 'academic_year_list' %}" class="nav-item-link">
+            <div class="nav-icon"><i class="fas fa-calendar-alt"></i></div>
+            <span>السنوات الدراسية</span>
+        </a>
+        <a href="{% url 'semester_list' %}" class="nav-item-link">
+            <div class="nav-icon"><i class="fas fa-calendar-week"></i></div>
+            <span>الفصول الدراسية</span>
+        </a>
+        <a href="{% url 'system_log' %}" class="nav-item-link {% if request.resolver_match.url_name == 'system_log' %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-history"></i></div>
+            <span>سجل النظام</span>
+        </a>
+        {% if user.is_superuser %}
+        <a href="{% url 'user_list' %}" class="nav-item-link">
+            <div class="nav-icon"><i class="fas fa-users-cog"></i></div>
+            <span>المستخدمون</span>
+        </a>
+        {% endif %}
+    </div>
+</nav>
+
+<!-- ===== TOPBAR ===== -->
+<header id="topbar">
+    <button class="topbar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+    <div class="page-title d-none d-lg-block">
+        <h4>{% block page_title %}{{ title|default:"نظام شؤون الطلاب" }}{% endblock %}</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">الرئيسية</a></li>
+                {% block breadcrumb %}{% endblock %}
+            </ol>
+        </nav>
+    </div>
+    
+    <!-- Global Search -->
+    <div class="global-search mx-auto d-none d-md-block">
+        <form action="{% url 'student_list' %}" method="get">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" name="q" class="form-control" placeholder="بحث سريع عن طالب (اسم، رقم، هوية)..." value="{{ search }}">
+        </form>
+    </div>
+    <div class="topbar-actions">
+        <div class="dropdown">
+            <div class="user-profile dropdown-toggle" data-bs-toggle="dropdown">
+                <div class="user-avatar">{{ user.first_name|first|upper|default:user.username|first|upper }}</div>
+                <div class="user-info d-none d-md-flex">
+                    <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                    <span class="user-role">{% if user.is_superuser %}مدير النظام{% elif user.is_staff %}موظف{% else %}مستخدم{% endif %}</span>
+                </div>
+            </div>
+            <ul class="dropdown-menu dropdown-menu-start shadow-lg border-0 mt-2">
+                <li><a class="dropdown-item py-2" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i>ملفي الشخصي</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'change_password' %}"><i class="fas fa-shield-alt me-2 text-warning"></i>تأمين الحساب</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i class="fas fa-power-off me-2"></i>تسجيل الخروج</a></li>
+            </ul>
+        </div>
+    </div>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main id="main-content">
+    <div class="content-wrapper">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show fade-in" role="alert">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+
+        <footer class="footer mt-5">
+            <div class="footer-copy">
+                &copy; {{ now|date:"Y" }} <strong>{{ sys_settings.university_name|default:"نظام شؤون الطلاب" }}</strong>. جميع الحقوق محفوظة.
+            </div>
+            <div class="footer-info">
+                <div class="dev-info">
+                    <span>تطوير وتصميم: <strong>muntadher hazim</strong></span>
+                    <span class="mx-2">|</span>
+                    <a href="mailto:muntadherhazim95@gmail.com"><i class="fas fa-envelope"></i> muntadherhazim95@gmail.com</a>
+                    <span class="mx-2">|</span>
+                    <a href="tel:07724978301"><i class="fas fa-phone"></i> 07724978301</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+// Sidebar toggle
+const sidebar = document.getElementById('sidebar');
+const topbar = document.getElementById('topbar');
+const mainContent = document.getElementById('main-content');
+const toggleBtn = document.getElementById('sidebarToggle');
+const closeBtn = document.getElementById('closeSidebar');
+
+let collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+function applySidebar() {
+    if (window.innerWidth > 768) {
+        if (collapsed) {
+            sidebar.classList.add('collapsed');
+            topbar.classList.add('expanded');
+            mainContent.classList.add('expanded');
+        } else {
+            sidebar.classList.remove('collapsed');
+            topbar.classList.remove('expanded');
+            mainContent.classList.remove('expanded');
+        }
+    } else {
+        sidebar.classList.remove('collapsed');
+        topbar.classList.remove('expanded');
+        mainContent.classList.remove('expanded');
+    }
+}
+
+applySidebar();
+
+toggleBtn.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('mobile-open');
+    } else {
+        collapsed = !collapsed;
+        localStorage.setItem('sidebarCollapsed', collapsed);
+        applySidebar();
+    }
+});
+
+if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+    });
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
+        if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('mobile-open');
+        }
+    }
+});
+
+window.addEventListener('resize', applySidebar);
+// Auto-dismiss alerts
+setTimeout(() => {
+    document.querySelectorAll('.alert:not(.alert-danger)').forEach(a => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(a);
+        bsAlert.close();
+    });
+}, 10000);
+// Initialize Select2 on all selects
+$(document).ready(function(){
+    $('select.form-select, select.form-control, select.select2-admin').each(function(){
+        $(this).select2({
+            theme: 'bootstrap-5',
+            dir: 'rtl',
+            language: { noResults: function(){ return 'لا توجد نتائج'; } },
+            allowClear: true,
+            placeholder: $(this).find('option[value=""]').text() || 'اختر...',
+            width: '100%'
+        });
+    });
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

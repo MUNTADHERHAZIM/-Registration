@@ -1,0 +1,187 @@
+{% extends 'base/base.html' %}
+{% block title %}تقرير الطلاب{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <!-- Filters and Field Selection -->
+    <div class="card mb-3">
+        <div class="card-header bg-light">
+            <i class="fas fa-filter text-primary me-2"></i>تخصيص التقرير والفلترة
+        </div>
+        <div class="card-body">
+            <form method="get" id="reportForm">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-2">
+                        <label class="form-label small">القسم</label>
+                        <select name="department" class="form-select">
+                            <option value="">كل الأقسام</option>
+                            {% for d in departments %}
+                            <option value="{{ d.pk }}" {% if dept_id == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">المرحلة</label>
+                        <select name="level" class="form-select">
+                            <option value="">كل المراحل</option>
+                            <option value="1" {% if level == "1" %}selected{% endif %}>الأولى</option>
+                            <option value="2" {% if level == "2" %}selected{% endif %}>الثانية</option>
+                            <option value="3" {% if level == "3" %}selected{% endif %}>الثالثة</option>
+                            <option value="4" {% if level == "4" %}selected{% endif %}>الرابعة</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">الحالة</label>
+                        <select name="status" class="form-select">
+                            <option value="">كل الحالات</option>
+                            <option value="active" {% if status == "active" %}selected{% endif %}>نشط</option>
+                            <option value="graduated" {% if status == "graduated" %}selected{% endif %}>متخرج</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">الجنس</label>
+                        <select name="gender" class="form-select">
+                            <option value="">الجنس</option>
+                            <option value="male" {% if gender == "male" %}selected{% endif %}>ذكر</option>
+                            <option value="female" {% if gender == "female" %}selected{% endif %}>أنثى</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary w-100">تحديث العرض</button>
+                    </div>
+                </div>
+
+                <!-- Field Selection for Export -->
+                <div class="border-top pt-3">
+                    <h6 class="fw-bold mb-3 small text-muted"><i class="fas fa-check-square me-2"></i>الحقول المطلوبة في التصدير (PDF / Excel)</h6>
+                    <div class="row g-2">
+                        {% for field_id, field_name in all_fields_list %}
+                        <div class="col-md-3 col-6">
+                            <div class="form-check custom-checkbox">
+                                <input class="form-check-input" type="checkbox" name="fields" value="{{ field_id }}" id="field_{{ field_id }}" 
+                                    {% if field_id in selected_fields %}checked{% endif %}>
+                                <label class="form-check-label" for="field_{{ field_id }}">
+                                    {{ field_name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="button" onclick="exportData('print')" class="btn btn-dark"><i class="fas fa-print me-1"></i>طباعة التقرير</button>
+                    <button type="button" onclick="exportData('excel')" class="btn btn-success"><i class="fas fa-file-excel me-1"></i>تصدير Excel</button>
+                    <button type="button" onclick="exportData('pdf')" class="btn btn-danger"><i class="fas fa-file-pdf me-1"></i>تصدير PDF</button>
+                </div>
+                <input type="hidden" name="export" id="exportInput">
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div>
+                    <div class="stat-number text-primary">{{ stats.total }}</div>
+                    <div class="stat-label">إجمالي الطلاب</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-mars"></i></div>
+                <div>
+                    <div class="stat-number text-primary">{{ stats.male }}</div>
+                    <div class="stat-label">عدد الذكور</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fas fa-venus"></i></div>
+                <div>
+                    <div class="stat-number text-danger">{{ stats.female }}</div>
+                    <div class="stat-label">عدد الإناث</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-star"></i></div>
+                <div>
+                    <div class="stat-number text-success">{{ stats.avg_gpa|floatformat:2 }}</div>
+                    <div class="stat-label">متوسط المعدل</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table Preview -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-table text-primary me-2"></i>معاينة البيانات (أول 100 سجل)</span>
+            <span class="badge bg-light text-dark border">نظام التصدير الديناميكي مفعل</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم الكامل</th>
+                            <th>الرقم الجامعي</th>
+                            <th>القسم</th>
+                            <th>المرحلة</th>
+                            <th>الجنس</th>
+                            <th>الحالة</th>
+                            <th>المعدل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><a href="{% url 'student_detail' s.pk %}" class="fw-bold text-decoration-none">{{ s.full_name }}</a></td>
+                            <td><code>{{ s.student_id }}</code></td>
+                            <td>{{ s.department.name }}</td>
+                            <td>{{ s.get_level_display }}</td>
+                            <td>{{ s.get_gender_display }}</td>
+                            <td><span class="badge status-{{ s.status }}">{{ s.get_status_display }}</span></td>
+                            <td><strong class="text-{{ s.get_gpa_color }}">{{ s.gpa }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">لا توجد نتائج مطابقة للفلترة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportData(type) {
+    const form = document.getElementById('reportForm');
+    const exportInput = document.getElementById('exportInput');
+    exportInput.value = type;
+    
+    if (type === 'print' || type === 'pdf') {
+        form.target = "_blank";
+    } else {
+        form.target = "_self";
+    }
+    
+    form.submit();
+    
+    // Reset for next normal filter submit
+    setTimeout(() => {
+        exportInput.value = '';
+        form.target = "_self";
+    }, 100);
+}
+</script>
+{% endblock %}

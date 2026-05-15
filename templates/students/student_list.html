@@ -1,0 +1,170 @@
+{% extends 'base/base.html' %}
+{% block title %}قائمة الطلاب{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">الطلاب</li>{% endblock %}
+{% block content %}
+<div class="fade-in">
+<!-- Filter & Search Bar -->
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <div class="search-box">
+                    <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="بحث بالاسم أو الرقم...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select name="department" class="form-select">
+                    <option value="">كل الأقسام</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.pk }}" {% if dept_filter == dept.pk|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="level" class="form-select">
+                    <option value="">كل المراحل</option>
+                    <option value="1" {% if level_filter == "1" %}selected{% endif %}>المرحلة الأولى</option>
+                    <option value="2" {% if level_filter == "2" %}selected{% endif %}>المرحلة الثانية</option>
+                    <option value="3" {% if level_filter == "3" %}selected{% endif %}>المرحلة الثالثة</option>
+                    <option value="4" {% if level_filter == "4" %}selected{% endif %}>المرحلة الرابعة</option>
+                    <option value="5" {% if level_filter == "5" %}selected{% endif %}>المرحلة الخامسة</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">كل الحالات</option>
+                    <option value="active" {% if status_filter == "active" %}selected{% endif %}>نشط</option>
+                    <option value="suspended" {% if status_filter == "suspended" %}selected{% endif %}>موقوف</option>
+                    <option value="graduated" {% if status_filter == "graduated" %}selected{% endif %}>متخرج</option>
+                    <option value="withdrawn" {% if status_filter == "withdrawn" %}selected{% endif %}>منسحب</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="sort" class="form-select">
+                    <option value="student_id" {% if sort_filter == "student_id" %}selected{% endif %}>ترتيب: الرقم الجامعي</option>
+                    <option value="name" {% if sort_filter == "name" %}selected{% endif %}>ترتيب: الاسم (أبجدي)</option>
+                    <option value="-gpa" {% if sort_filter == "-gpa" %}selected{% endif %}>ترتيب: المعدل (الأعلى)</option>
+                    <option value="gpa" {% if sort_filter == "gpa" %}selected{% endif %}>ترتيب: المعدل (الأقل)</option>
+                    <option value="-created_at" {% if sort_filter == "-created_at" %}selected{% endif %}>ترتيب: الأحدث تسجيلاً</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="fas fa-filter me-1"></i>فلترة</button>
+                <a href="{% url 'student_list' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-user-graduate text-primary me-2"></i>
+        الطلاب <span class="badge bg-primary ms-1">{{ total_count }}</span></span>
+        <div class="d-flex gap-2">
+            <a href="{% url 'reports_home' %}?export=pdf&{{ request.GET.urlencode }}" class="btn btn-outline-danger btn-sm">
+                <i class="fas fa-file-pdf me-1"></i>PDF
+            </a>
+            <a href="{% url 'students_report' %}?export=excel&{{ request.GET.urlencode }}" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-file-excel me-1"></i>Excel
+            </a>
+            <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i>إضافة طالب
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>الطالب</th>
+                        <th>الرقم الجامعي</th>
+                        <th>القسم</th>
+                        <th>المرحلة</th>
+                        <th>الجنس</th>
+                        <th>نوع الدراسة</th>
+                        <th>الحالة</th>
+                        <th>المعدل</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if student.photo %}
+                                <img src="{{ student.photo.url }}" class="student-avatar" alt="">
+                                {% else %}
+                                <div class="student-avatar">{{ student.first_name|first }}{{ student.last_name|first|default:"" }}</div>
+                                {% endif %}
+                                <div>
+                                    <a href="{% url 'student_detail' student.pk %}" class="fw-600 text-decoration-none text-dark">{{ student.short_name }}</a>
+                                    {% if student.phone %}
+                                    <br><small class="text-muted"><i class="fas fa-phone-alt me-1" style="font-size: 0.8em;"></i>{{ student.phone }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td><code class="text-primary">{{ student.student_id }}</code></td>
+                        <td><span class="text-truncate d-inline-block" style="max-width:130px">{{ student.department.name }}</span></td>
+                        <td>{{ student.get_level_display }}</td>
+                        <td>
+                            {% if student.gender == 'male' %}
+                            <span class="text-primary"><i class="fas fa-mars me-1"></i>ذكر</span>
+                            {% else %}
+                            <span class="text-danger"><i class="fas fa-venus me-1"></i>أنثى</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ student.get_study_type_display }}</td>
+                        <td><span class="badge status-{{ student.status }}">{{ student.get_status_display }}</span></td>
+                        <td>
+                            <span class="fw-bold text-{{ student.get_gpa_color }}">{{ student.gpa }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'student_detail' student.pk %}" class="btn btn-outline-primary btn-sm" title="عرض"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'student_edit' student.pk %}" class="btn btn-outline-warning btn-sm" title="تعديل"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline-danger btn-sm" title="حذف"><i class="fas fa-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="fas fa-user-slash fa-3x text-muted mb-3 d-block"></i>
+                            <div class="text-muted">لا توجد نتائج مطابقة</div>
+                            <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm mt-2">إضافة طالب جديد</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <small class="text-muted">عرض {{ page_obj.start_index }}–{{ page_obj.end_index }} من {{ total_count }}</small>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}">السابق</a></li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}">{{ num }}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}">التالي</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

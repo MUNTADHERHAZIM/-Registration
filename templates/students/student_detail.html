@@ -1,0 +1,328 @@
+{% extends 'base/base.html' %}
+{% block title %}ملف الطالب{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'student_list' %}">الطلاب</a></li>
+<li class="breadcrumb-item active">{{ student.short_name }}</li>
+{% endblock %}
+{% block content %}
+<div class="fade-in">
+<div class="row g-3">
+    <!-- Left: Profile Card -->
+    <div class="col-lg-3">
+        <div class="card text-center">
+            <div class="card-body p-4">
+                {% if student.photo %}
+                <img src="{{ student.photo.url }}" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover;border:3px solid var(--primary)" alt="">
+                {% else %}
+                <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width:100px;height:100px;background:linear-gradient(135deg,var(--primary),var(--primary-light));font-size:36px;font-weight:800;color:white">
+                    {{ student.first_name|first }}{{ student.last_name|first }}
+                </div>
+                {% endif %}
+                <h5 class="fw-bold mb-1">{{ student.full_name }}</h5>
+                <code class="text-primary d-block mb-2" style="font-size:16px">{{ student.student_id }}</code>
+                <span class="badge status-{{ student.status }} mb-3">{{ student.get_status_display }}</span>
+                <div class="border rounded-3 p-3 mb-3 text-start">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">المعدل التراكمي</small>
+                        <strong class="text-{{ student.get_gpa_color }}">{{ student.gpa }}</strong>
+                    </div>
+                    <div class="progress" style="height:8px;border-radius:4px">
+                        <div class="progress-bar bg-{{ student.get_gpa_color }}" style="width:{{ student.gpa|floatformat:0 }}%"></div>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'student_edit' student.pk %}" class="btn btn-primary btn-sm"><i class="fas fa-edit me-1"></i>تعديل البيانات</a>
+                    <a href="{% url 'student_print' student.pk %}" target="_blank" class="btn btn-outline-dark btn-sm"><i class="fas fa-print me-1"></i>طباعة تأييد قيد</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-info-circle text-primary me-2"></i>معلومات سريعة</div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-building me-1"></i>القسم</small>
+                        <small class="fw-600">{{ student.department.name }}</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-layer-group me-1"></i>المرحلة</small>
+                        <small class="fw-600">{{ student.get_level_display }}</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-sun me-1"></i>نوع الدراسة</small>
+                        <small class="fw-600">{{ student.get_study_type_display }}</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-calendar me-1"></i>سنة القبول</small>
+                        <small class="fw-600">{{ student.entry_year.year }}</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-birthday-cake me-1"></i>العمر</small>
+                        <small class="fw-600">{{ student.age }} سنة</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-phone me-1"></i>الهاتف</small>
+                        <small class="fw-600">{{ student.phone|default:"—" }}</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>المحافظة</small>
+                        <small class="fw-600">{{ student.governorate|default:"—" }}</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3">
+                        <small class="text-muted"><i class="fas fa-id-card me-1"></i>الهوية</small>
+                        <small class="fw-600">{{ student.national_id }}</small>
+                    </li>
+                    {% if student.archive_locker %}
+                    <li class="list-group-item d-flex justify-content-between py-2 px-3 bg-light bg-opacity-50">
+                        <small class="text-primary fw-bold"><i class="fas fa-archive me-1"></i>موقع الأرشيف</small>
+                        <small class="badge bg-primary rounded-pill">{{ student.archive_locker }}</small>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Tabs -->
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs border-0 px-3" id="studentTabs">
+
+                    <li class="nav-item">
+                        <a class="nav-link fw-600 py-3" data-bs-toggle="tab" href="#extendedTab">
+                            <i class="fas fa-id-card-alt me-1"></i>بيانات موسعة
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-600 py-3" data-bs-toggle="tab" href="#docsTab">
+                            <i class="fas fa-folder me-1"></i>الوثائق
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-600 py-3" data-bs-toggle="tab" href="#notesTab">
+                            <i class="fas fa-sticky-note me-1"></i>ملاحظات
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body tab-content" id="studentTabsContent">
+
+                <!-- Extended Data Tab -->
+                <div class="tab-pane fade" id="extendedTab">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">البيانات الأساسية</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr><td class="text-muted" style="width:140px;">اللقب:</td><td class="fw-bold">{{ student.surname|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">اسم الأم:</td><td class="fw-bold">{{ student.mother_name|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الرقم الامتحاني:</td><td class="fw-bold">{{ student.exam_number|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الديانة:</td><td class="fw-bold">{{ student.religion|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الحالة الزوجية:</td><td class="fw-bold">{{ student.marital_status|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الحالة الصحية:</td><td class="fw-bold">{{ student.health_status|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">حالة الطالب:</td><td class="fw-bold">{{ student.origin_status|default:"—" }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">بيانات التخرج والقبول</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr><td class="text-muted" style="width:140px;">سنة التخرج:</td><td class="fw-bold">{{ student.grad_year_str|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">المدرسة:</td><td class="fw-bold">{{ student.school_name|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الفرع:</td><td class="fw-bold">{{ student.branch|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الدور:</td><td class="fw-bold">{{ student.admission_round|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">معدل التخرج:</td><td class="fw-bold">{{ student.avg_no_additions|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">معدل القبول:</td><td class="fw-bold">{{ student.admission_avg|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">قناة القبول:</td><td class="fw-bold">{{ student.admission_channel|default:"—" }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">بيانات التسجيل والوصل</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless">
+                                        <tr><td class="text-muted" style="width:140px;">كود التسجيل:</td><td class="fw-bold">{{ student.registration_code|default:"—" }}</td></tr>
+                                        <tr><td class="text-muted">تاريخ التسجيل:</td><td class="fw-bold">{{ student.registration_date|date:"Y/m/d"|default:"—" }}</td></tr>
+                                        <tr><td class="text-muted">موقع الأرشيف الورقي:</td><td class="text-primary fw-bold">{{ student.archive_locker|default:"—" }}</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-sm table-borderless">
+                                        <tr><td class="text-muted" style="width:140px;">رقم الوصل:</td><td class="fw-bold">{{ student.receipt_number|default:"—" }}</td></tr>
+                                        <tr><td class="text-muted">تاريخ الوصل:</td><td class="fw-bold">{{ student.receipt_date|date:"Y/m/d"|default:"—" }}</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Tab -->
+                <div class="tab-pane fade show active" id="docsTab">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">وثائق الطالب المرفوعة</h6>
+                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDocModal">
+                            <i class="fas fa-plus me-1"></i>إضافة وثيقة
+                        </button>
+                    </div>
+
+                    {% if documents %}
+                    <div class="row g-3">
+                        {% for doc in documents %}
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 bg-light-subtle h-100 d-flex flex-column">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="icon-box bg-primary-subtle text-primary rounded-2 p-2">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold small text-truncate" title="{{ doc.title }}">{{ doc.title }}</div>
+                                        <small class="text-muted" style="font-size: 11px;">{{ doc.get_doc_type_display }}</small>
+                                    </div>
+                                </div>
+                                <div class="mt-auto pt-2 border-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted" style="font-size: 10px;">{{ doc.uploaded_at|date:"Y/m/d" }}</small>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ doc.file.url }}" class="btn btn-link btn-sm p-0 text-decoration-none" target="_blank">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                            <a href="{% url 'delete_student_document' doc.pk %}" class="btn btn-link btn-sm p-0 text-danger" onclick="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
+                        لا توجد وثائق مرفقة حالياً
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Notes Tab -->
+                <div class="tab-pane fade" id="notesTab">
+                    <div class="mb-4">
+                        <form action="{% url 'add_student_note' student.pk %}" method="post" class="card bg-light border-0">
+                            {% csrf_token %}
+                            <div class="card-body p-3">
+                                <label class="form-label small fw-bold">إضافة ملاحظة جديدة</label>
+                                <textarea name="text" class="form-control mb-2" rows="3" placeholder="اكتب الملاحظة هنا..."></textarea>
+                                <div class="text-start">
+                                    <button type="submit" class="btn btn-primary btn-sm px-4">حفظ الملاحظة</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <h6 class="fw-bold mb-3 border-bottom pb-2">سجل الملاحظات</h6>
+                    {% if student.student_notes.all %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for note in student.student_notes.all %}
+                        <div class="border-start border-4 border-primary bg-light p-3 rounded-2 position-relative">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <small class="text-primary fw-bold"><i class="fas fa-user-edit me-1"></i>{{ note.author }}</small>
+                                <small class="text-muted">{{ note.created_at|date:"Y/m/d H:i" }}</small>
+                            </div>
+                            <div class="text-dark" style="white-space: pre-line;">{{ note.text }}</div>
+                            <a href="{% url 'delete_student_note' note.pk %}" class="btn btn-link btn-sm text-danger p-0 position-absolute bottom-0 start-0 m-2" 
+                               onclick="return confirm('هل أنت متأكد من حذف هذه الملاحظة؟')" title="حذف">
+                                <i class="fas fa-times-circle"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-comment-slash fa-2x mb-2 d-block opacity-25"></i>
+                        لا توجد ملاحظات مسجلة لهذا الطالب
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Add Document Modal -->
+<div class="modal fade" id="addDocModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">إضافة وثيقة جديدة للطالب</h5>
+                <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'add_student_document' student.pk %}" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">نوع الوثيقة</label>
+                        {{ doc_form.doc_type }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">عنوان الوثيقة</label>
+                        {{ doc_form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">الملف (صورة أو PDF)</label>
+                        {{ doc_form.file }}
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold">ملاحظات</label>
+                        {{ doc_form.notes }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success btn-sm px-4">حفظ الوثيقة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab persistence
+    const tabContainer = document.getElementById('studentTabs');
+    const tabs = tabContainer.querySelectorAll('[data-bs-toggle="tab"]');
+    
+    // 1. Check URL hash first
+    const hash = window.location.hash;
+    if (hash) {
+        const targetTab = tabContainer.querySelector(`[href="${hash}"]`);
+        if (targetTab) {
+            new bootstrap.Tab(targetTab).show();
+        }
+    } else {
+        // 2. Fallback to localStorage
+        const activeTabId = localStorage.getItem('activeStudentTab');
+        if (activeTabId) {
+            const targetTab = tabContainer.querySelector(`[href="${activeTabId}"]`);
+            if (targetTab) {
+                new bootstrap.Tab(targetTab).show();
+            }
+        }
+    }
+
+    // Save active tab to localStorage
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(e) {
+            const target = e.target.getAttribute('href');
+            localStorage.setItem('activeStudentTab', target);
+            // Also update URL hash without scrolling
+            history.replaceState(null, null, target);
+        });
+    });
+});
+</script>
+{% endblock %}
