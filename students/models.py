@@ -184,7 +184,7 @@ class Student(models.Model):
     first_name = models.CharField(max_length=100, verbose_name='الاسم الأول')
     second_name = models.CharField(max_length=100, verbose_name='اسم الأب')
     third_name = models.CharField(max_length=100, verbose_name='اسم الجد')
-    last_name = models.CharField(max_length=100, verbose_name='الكنية')
+    last_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='الكنية')
     
     # New fields requested
     exam_number = models.CharField(max_length=50, blank=True, null=True, verbose_name='الرقم الامتحاني')

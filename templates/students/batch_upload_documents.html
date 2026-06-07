@@ -1,0 +1,443 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'student_list' %}" class="text-decoration-none">الطلاب</a></li>
+<li class="breadcrumb-item active">رفع وثائق بالدفعة</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-zone {
+        border: 2px dashed var(--primary-light);
+        background: rgba(37, 99, 235, 0.02);
+        border-radius: 20px;
+        padding: 50px 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+        background: rgba(37, 99, 235, 0.08);
+        border-color: var(--primary);
+        transform: scale(1.01);
+    }
+    .upload-icon {
+        font-size: 50px;
+        color: var(--primary);
+        margin-bottom: 20px;
+        transition: var(--transition);
+    }
+    .upload-zone:hover .upload-icon {
+        transform: translateY(-5px);
+    }
+    .progress-bar-container {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        display: none;
+    }
+    .instruction-card {
+        background: #fffdf5;
+        border-right: 4px solid var(--warning);
+    }
+    .review-table th {
+        background-color: #f8fafc !important;
+        border-bottom: 2px solid var(--border);
+        font-weight: 700;
+    }
+    .review-table td {
+        padding: 12px;
+    }
+    .badge-status {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 50px;
+    }
+    .matched-badge {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+    .unmatched-badge {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+    .select2-container--bootstrap-5 {
+        min-width: 250px !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    {% if step == 1 %}
+    <!-- STEP 1: UPLOAD ZIP ARCHIVE -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <span class="fs-5 fw-bold text-dark"><i class="fas fa-file-archive text-primary me-2"></i>خطوة 1: اختيار أرشيف الوثائق (ZIP)</span>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                        {% csrf_token %}
+                        
+                        <div class="upload-zone mb-4" id="dropZone">
+                            <input type="file" name="zip_file" id="fileInput" class="d-none" accept=".zip" required>
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <h5 class="fw-bold mb-2">اسحب وأسقط ملف ZIP هنا أو انقر للاختيار</h5>
+                            <p class="text-muted small">يرجى التأكد من أن الملف هو أرشيف بصيغة (.zip) ولا يتجاوز حجمه 100 ميجابايت.</p>
+                            <div class="badge bg-light text-dark border p-2 mt-2" id="fileNameDisplay" style="display:none;">
+                                <i class="fas fa-file-zip-o me-1"></i> <span id="fileNameText">filename.zip</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">نوع الوثائق الافتراضي (في حال لم يتم التعرف عليه)</label>
+                                <select class="form-select" name="fallback_doc_type">
+                                    {% for val, name in DOC_TYPE_CHOICES %}
+                                    <option value="{{ val }}" {% if val == 'other' %}selected{% endif %}>{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">ملاحظات عامة (ستضاف لجميع الوثائق المرفوعة)</label>
+                                <input type="text" class="form-control" name="batch_notes" placeholder="مثال: وثائق تقديم القبول المركزي للوجبة الأولى">
+                            </div>
+                        </div>
+
+                        <div class="progress-bar-container mb-4" id="progressContainer">
+                            <div class="progress-bar bg-primary" id="progressBar" style="width: 0%"></div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-magic me-2"></i>رفع وتحليل محتويات الأرشيف
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card instruction-card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold text-warning mb-3"><i class="fas fa-info-circle me-2"></i>كيفية المطابقة التلقائية الذكية؟</h5>
+                    <p class="small text-muted mb-3">يقوم النظام تلقائياً بتحليل أسماء الملفات داخل أرشيف ZIP ومطابقتها مع الطلاب كالتالي:</p>
+                    <ul class="small text-muted ps-3">
+                        <li class="mb-2"><strong>مطابقة الرقم الجامعي:</strong> إذا احتوى اسم الملف على الرقم الجامعي للطالب (مثل: <code>20261001_id.pdf</code>).</li>
+                        <li class="mb-2"><strong>مطابقة الرقم الامتحاني:</strong> إذا احتوى اسم الملف على الرقم الامتحاني المكون من أرقام (مثل: <code>12345678_graduation.jpg</code>).</li>
+                        <li class="mb-2"><strong>مطابقة الاسم الثلاثي:</strong> يقوم النظام بالبحث المطابق والتقريبي على الاسم إذا احتوى اسم الملف على اسم الطالب (مثل: <code>احمد علي حسين.png</code>).</li>
+                    </ul>
+                    <hr>
+                    <h6 class="fw-bold mb-2">أنواع الملفات المدعومة:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-light text-primary border">PDF</span>
+                        <span class="badge bg-light text-primary border">PNG</span>
+                        <span class="badge bg-light text-primary border">JPG</span>
+                        <span class="badge bg-light text-primary border">JPEG</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% elif step == 2 %}
+    <!-- STEP 2: REVIEW MATCHES & CONFIRM -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <span class="fs-5 fw-bold text-dark"><i class="fas fa-list-check text-primary me-2"></i>خطوة 2: مراجعة مطابقة الملفات بالطلاب</span>
+                <div class="text-muted small mt-1">يرجى مراجعة وتصحيح المطابقات أدناه قبل الضغط على تأكيد الحفظ النهائي.</div>
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+                <div class="badge bg-success-light text-success p-2 border">
+                    تم التعرف: <span id="matchedCount" class="fw-bold">0</span>
+                </div>
+                <div class="badge bg-danger-light text-danger p-2 border">
+                    غير معروف: <span id="unmatchedCount" class="fw-bold">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <form method="post" action="{% url 'confirm_batch_upload' %}" id="confirmForm">
+                {% csrf_token %}
+                <input type="hidden" name="session_id" value="{{ upload_session_id }}">
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 review-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px" class="text-center">استيراد</th>
+                                <th>اسم الملف الأصلي</th>
+                                <th>اسم الطالب المطابق (تلقائي / يدوي)</th>
+                                <th>نوع المستند</th>
+                                <th>عنوان المستند النهائي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in files_data %}
+                            <tr class="file-row" data-matched="{% if file.matched_student_id %}true{% else %}false{% endif %}">
+                                <td class="text-center">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox" name="include_{{ file.temp_filename }}" class="form-check-input file-include-checkbox shadow-none" checked>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-dark fw-bold text-wrap" style="max-width: 250px;">{{ file.original_name }}</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if file.matched_student_id %}
+                                        <span class="badge badge-status matched-badge"><i class="fas fa-check-circle me-1"></i>مطابق تلقائي</span>
+                                        {% else %}
+                                        <span class="badge badge-status unmatched-badge"><i class="fas fa-exclamation-triangle me-1"></i>غير معروف</span>
+                                        {% endif %}
+                                        
+                                        <!-- Searchable student list using select2 -->
+                                        <select name="student_{{ file.temp_filename }}" class="form-select select2-student" required>
+                                            <option value="">-- اختر الطالب لمطابقة المستند --</option>
+                                            {% for student in all_students %}
+                                            <option value="{{ student.id }}" {% if file.matched_student_id|stringformat:"i" == student.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ student.student_id }} - {{ student.first_name }} {{ student.second_name }} {{ student.third_name }} {{ student.last_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </td>
+                                <td>
+                                    <select name="doc_type_{{ file.temp_filename }}" class="form-select w-auto">
+                                        {% for val, name in DOC_TYPE_CHOICES %}
+                                        <option value="{{ val }}" {% if val == file.guessed_type %}selected{% endif %}>{{ name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="title_{{ file.temp_filename }}" class="form-control" value="{{ file.doc_title }}" required style="min-width: 180px;">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer bg-white border-top p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <a href="{% url 'batch_upload_documents' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>إلغاء والعودة للبداية
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg px-5">
+                        <i class="fas fa-save me-2"></i>تأكيد وحفظ المستندات بالدفعة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if step == 1 %}
+    // Drag & Drop Functionality
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const fileNameText = document.getElementById('fileNameText');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+
+    // Click to select
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Highlight drop zone
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        }, false);
+    });
+
+    // Drop files
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0 && files[0].name.endsWith('.zip')) {
+            fileInput.files = files;
+            showFileInfo(files[0].name);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'ملف غير صالح',
+                text: 'يرجى سحب وإسقاط ملف ZIP فقط!',
+                confirmButtonText: 'حسناً'
+            });
+        }
+    });
+
+    // File selected
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            showFileInfo(fileInput.files[0].name);
+        }
+    });
+
+    function showFileInfo(name) {
+        fileNameText.textContent = name;
+        fileNameDisplay.style.display = 'inline-block';
+    }
+
+    // Submit with visual progress loader
+    uploadForm.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري تحليل الملف ومطابقة الطلاب... يرجى الانتظار...';
+        progressContainer.style.display = 'block';
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5;
+            if (progress >= 95) {
+                clearInterval(interval);
+            }
+            progressBar.style.width = progress + '%';
+        }, 300);
+    });
+
+    {% elif step == 2 %}
+    // Review Page Functions
+    const select2s = $('.select2-student');
+    
+    // Customize select2 specifically for this screen
+    select2s.each(function() {
+        $(this).select2({
+            theme: 'bootstrap-5',
+            dir: 'rtl',
+            placeholder: '-- اختر الطالب --',
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+    // Update statistics counter
+    function updateCounters() {
+        let matched = 0;
+        let unmatched = 0;
+        
+        document.querySelectorAll('.file-row').forEach(row => {
+            const select = row.querySelector('.select2-student');
+            const checkbox = row.querySelector('.file-include-checkbox');
+            
+            if (checkbox.checked) {
+                if (select.value) {
+                    matched++;
+                } else {
+                    unmatched++;
+                }
+            }
+        });
+        
+        document.getElementById('matchedCount').textContent = matched;
+        document.getElementById('unmatchedCount').textContent = unmatched;
+    }
+
+    // Trigger update counters on load and on any change
+    updateCounters();
+    
+    $('.select2-student').on('change', function() {
+        const row = $(this).closest('.file-row');
+        const badge = row.find('.badge-status');
+        
+        if (this.value) {
+            badge.removeClass('unmatched-badge').addClass('matched-badge').html('<i class="fas fa-check-circle me-1"></i>مطابق');
+        } else {
+            badge.removeClass('matched-badge').addClass('unmatched-badge').html('<i class="fas fa-exclamation-triangle me-1"></i>غير معروف');
+        }
+        updateCounters();
+    });
+
+    document.querySelectorAll('.file-include-checkbox').forEach(chk => {
+        chk.addEventListener('change', function() {
+            const row = this.closest('.file-row');
+            if (this.checked) {
+                row.style.opacity = '1';
+                row.querySelector('.select2-student').disabled = false;
+                row.querySelector('input[type="text"]').disabled = false;
+                row.querySelector('select[name^="doc_type_"]').disabled = false;
+            } else {
+                row.style.opacity = '0.5';
+                row.querySelector('.select2-student').disabled = true;
+                row.querySelector('input[type="text"]').disabled = true;
+                row.querySelector('select[name^="doc_type_"]').disabled = true;
+            }
+            updateCounters();
+        });
+    });
+
+    // Form Confirmation
+    const confirmForm = document.getElementById('confirmForm');
+    confirmForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const checkedCount = document.querySelectorAll('.file-include-checkbox:checked').length;
+        if (checkedCount === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'تنبيه',
+                text: 'يرجى اختيار ملف واحد على الأقل للاستيراد!',
+                confirmButtonText: 'حسناً'
+            });
+            return;
+        }
+
+        const unmatchedCount = parseInt(document.getElementById('unmatchedCount').textContent);
+        if (unmatchedCount > 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'مستندات غير مطابقة',
+                text: `هنالك (${unmatchedCount}) مستندات لم يتم مطابقتها مع أي طالب. سيتم تخطيها ولن يتم استيرادها! هل ترغب بالاستمرار؟`,
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'نعم، استمر واحفظ المطابقات',
+                cancelButtonText: 'إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    confirmForm.submit();
+                }
+            });
+        } else {
+            Swal.fire({
+                title: 'حفظ المستندات بالدفعة',
+                text: `هل أنت متأكد من حفظ عدد (${checkedCount}) مستندات للطلاب المحددّين؟`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'نعم، قم بالحفظ والإنهاء',
+                cancelButtonText: 'تراجع'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    confirmForm.submit();
+                }
+            });
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

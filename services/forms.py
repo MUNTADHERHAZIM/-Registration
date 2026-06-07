@@ -85,9 +85,10 @@ class UpdateRequestStatusForm(forms.ModelForm):
 
     class Meta:
         model = StudentRequest
-        fields = ['status', 'admin_notes']
+        fields = ['status', 'assigned_to', 'admin_notes']
         widgets = {
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-select select2-field'}),
             'admin_notes': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,

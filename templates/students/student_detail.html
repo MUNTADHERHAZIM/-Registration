@@ -33,10 +33,22 @@
                 <div class="d-grid gap-2">
                     <a href="{% url 'student_edit' student.pk %}" class="btn btn-primary btn-sm"><i class="fas fa-edit me-1"></i>تعديل البيانات</a>
                     <a href="{% url 'student_print' student.pk %}" target="_blank" class="btn btn-outline-dark btn-sm"><i class="fas fa-print me-1"></i>طباعة تأييد قيد</a>
+                    <div class="dropdown d-grid mt-1">
+                        <button class="btn btn-success btn-sm dropdown-toggle text-white fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fab fa-whatsapp me-1"></i> إشعارات واتساب
+                        </button>
+                        <ul class="dropdown-menu text-end w-100 shadow-sm border-0">
+                            <li><a class="dropdown-item py-2" href="{% url 'student_whatsapp_redirect' student.pk %}?action=admission" target="_blank"><i class="fas fa-check-circle text-success me-2"></i> إشعار قبول مبدئي</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'student_whatsapp_redirect' student.pk %}?action=attendance" target="_blank"><i class="fas fa-user-check text-primary me-2"></i> إشعار حضور/مباشرة</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'student_whatsapp_redirect' student.pk %}?action=missing_docs" target="_blank"><i class="fas fa-exclamation-triangle text-warning me-2"></i> طلب نواقص ملف</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'student_whatsapp_redirect' student.pk %}?action=send_docs" target="_blank"><i class="fas fa-file-pdf text-danger me-2"></i> إرسال جميع الوثائق المرفقة</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'student_whatsapp_redirect' student.pk %}?action=custom" target="_blank"><i class="fas fa-comment-dots text-secondary me-2"></i> مراسلة حرة</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-
         <!-- Quick Info -->
         <div class="card">
             <div class="card-header"><i class="fas fa-info-circle text-primary me-2"></i>معلومات سريعة</div>
@@ -185,10 +197,13 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted" style="font-size: 10px;">{{ doc.uploaded_at|date:"Y/m/d" }}</small>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ doc.file.url }}" class="btn btn-link btn-sm p-0 text-decoration-none" target="_blank">
+                                            <a href="https://wa.me/964{{ student.phone|slice:'1:' }}?text=عزيزي الطالب، نرفق لك نسخة من ({{ doc.title }}): {{ request.scheme }}://{{ request.get_host }}{{ doc.file.url }}" class="btn btn-link btn-sm p-0 text-success text-decoration-none" target="_blank" title="إرسال عبر واتساب">
+                                                <i class="fab fa-whatsapp"></i>
+                                            </a>
+                                            <a href="{{ doc.file.url }}" class="btn btn-link btn-sm p-0 text-decoration-none" target="_blank" title="عرض">
                                                 <i class="fas fa-external-link-alt"></i>
                                             </a>
-                                            <a href="{% url 'delete_student_document' doc.pk %}" class="btn btn-link btn-sm p-0 text-danger" onclick="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟')">
+                                            <a href="{% url 'delete_student_document' doc.pk %}" class="btn btn-link btn-sm p-0 text-danger" onclick="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟')" title="حذف">
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>

@@ -13,4 +13,8 @@ urlpatterns = [
     # Staff URLs (login required)
     path('manage/', views.manage_requests, name='manage_requests'),
     path('manage/<int:pk>/update/', views.update_request_status, name='update_request_status'),
+
+    # Document Verification & Generation URLs (public / secure)
+    path('verify/<str:tracking>/', views.verify_request_document, name='verify_request_document'),
+    path('request/<str:tracking>/pdf/', views.generate_request_pdf, name='generate_request_pdf'),
 ]

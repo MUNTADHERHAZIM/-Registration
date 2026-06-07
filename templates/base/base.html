@@ -466,6 +466,12 @@
             <div class="nav-icon"><i class="fas fa-arrow-circle-right"></i></div>
             <span>ترحيل الطلاب</span>
         </a>
+        {% if user.is_superuser %}
+        <a href="{% url 'batch_upload_documents' %}" class="nav-item-link {% if 'batch_upload' in request.resolver_match.url_name %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-file-upload text-warning"></i></div>
+            <span>رفع وثائق بالدفعة</span>
+        </a>
+        {% endif %}
 
 
         <div class="nav-section-title">التقارير</div>
@@ -506,6 +512,10 @@
             <span>سجل النظام</span>
         </a>
         {% if user.is_superuser %}
+        <a href="{% url 'system_settings' %}" class="nav-item-link {% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-sliders-h text-primary"></i></div>
+            <span>إعدادات النظام</span>
+        </a>
         <a href="{% url 'user_list' %}" class="nav-item-link">
             <div class="nav-icon"><i class="fas fa-users-cog"></i></div>
             <span>المستخدمون</span>

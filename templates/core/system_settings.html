@@ -1,0 +1,390 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item active">إعدادات النظام</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Theme Mockup styling */
+    .mockup-container {
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        position: relative;
+    }
+    .mockup-header {
+        height: 40px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 15px;
+        gap: 6px;
+    }
+    .mockup-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+    .mockup-dot.red { background: #ef4444; }
+    .mockup-dot.yellow { background: #f59e0b; }
+    .mockup-dot.green { background: #10b981; }
+    
+    .mockup-body {
+        display: flex;
+        height: 280px;
+    }
+    .mockup-sidebar {
+        width: 110px;
+        background: #0f172a;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 8px;
+        gap: 6px;
+        transition: var(--transition);
+    }
+    .mockup-brand {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        margin-bottom: 6px;
+    }
+    .mockup-brand-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: white;
+    }
+    .mockup-brand-text {
+        font-size: 8px;
+        color: white;
+        font-weight: 700;
+        line-height: 1.1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .mockup-nav-item {
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px;
+        font-size: 8px;
+        color: #94a3b8;
+        text-decoration: none;
+    }
+    .mockup-nav-item.active {
+        color: white;
+    }
+    .mockup-main {
+        flex: 1;
+        background: #f1f5f9;
+        display: flex;
+        flex-direction: column;
+    }
+    .mockup-topbar {
+        height: 35px;
+        background: white;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 15px;
+    }
+    .mockup-topbar-title {
+        font-size: 9px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .mockup-topbar-profile {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .mockup-topbar-avatar {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: bold;
+    }
+    .mockup-content {
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+    }
+    .mockup-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .mockup-card-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 14px;
+    }
+    .mockup-card-text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    .mockup-card-val {
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .mockup-card-lbl {
+        font-size: 8px;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="row">
+        <!-- Left: Real-time Theme Preview Mockup -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white border-bottom">
+                    <span class="fw-bold text-dark"><i class="fas fa-eye text-primary me-2"></i>معاينة حية وتفاعلية للهوية</span>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <p class="text-muted small text-center mb-4">تتغير هذه المعاينة المصغرة تلقائياً وبشكل حي فور قيامك بتعديل الحقول أو اختيار الألوان بالطرف الآخر!</p>
+                    
+                    <div class="mockup-container">
+                        <!-- Browser Header mockup -->
+                        <div class="mockup-header">
+                            <div class="mockup-dot red"></div>
+                            <div class="mockup-dot yellow"></div>
+                            <div class="mockup-dot green"></div>
+                            <div class="ms-auto font-monospace text-muted" style="font-size:8px;">http://127.0.0.1:8001/</div>
+                        </div>
+                        
+                        <!-- Body Mockup -->
+                        <div class="mockup-body">
+                            <!-- Sidebar Mockup -->
+                            <div class="mockup-sidebar">
+                                <div class="mockup-brand">
+                                    <div class="mockup-brand-icon" id="previewBrandIcon" style="background-color: {{ settings.header_color|default:'#1a237e' }};">
+                                        {% if settings.logo %}
+                                            <img src="{{ settings.logo.url }}" id="previewLogoImg" style="width:14px;height:14px;object-fit:contain;">
+                                        {% else %}
+                                            <i class="fas fa-university" id="previewBrandLogoPlaceholder"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mockup-brand-text">
+                                        <div id="previewUnivName" class="fw-bold">{{ settings.university_name|default:"الجامعة التقنية" }}</div>
+                                        <div id="previewCollName" class="text-white-50" style="font-size: 6px;">{{ settings.college_name|default:"التسجيل الجامعي" }}</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-nav-item active" id="previewActiveNavItem" style="background-color: {{ settings.header_color|default:'#1a237e' }};">
+                                    <i class="fas fa-chart-pie me-1"></i> <span>لوحة التحكم</span>
+                                </div>
+                                <div class="mockup-nav-item">
+                                    <i class="fas fa-user-graduate me-1"></i> <span>الطلاب</span>
+                                </div>
+                                <div class="mockup-nav-item">
+                                    <i class="fas fa-building me-1"></i> <span>الأقسام</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Page Mockup -->
+                            <div class="mockup-main">
+                                <div class="mockup-topbar">
+                                    <div class="mockup-topbar-title">شؤون الطلاب</div>
+                                    <div class="mockup-topbar-profile">
+                                        <div class="mockup-topbar-avatar" id="previewAvatar" style="background-color: {{ settings.header_color|default:'#1a237e' }};">A</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-content">
+                                    <div class="mockup-card">
+                                        <div class="mockup-card-icon" id="previewCardIcon" style="background: linear-gradient(135deg, {{ settings.header_color|default:'#1a237e' }}, #7b1fa2);">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="mockup-card-text">
+                                            <div class="mockup-card-val">1,240</div>
+                                            <div class="mockup-card-lbl">طالب نشط</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Settings Form -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white border-bottom p-0">
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-tabs border-0" id="settingsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active px-4 py-3 border-0 rounded-0" id="identity-tab" data-bs-toggle="tab" data-bs-target="#identity" type="button" role="tab" style="font-weight:700;">
+                                <i class="fas fa-palette me-2 text-primary"></i>1. الهوية البصرية والألوان
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link px-4 py-3 border-0 rounded-0" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" style="font-weight:700;">
+                                <i class="fas fa-address-book me-2 text-success"></i>2. معلومات الاتصال والعنوان
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="settingsForm">
+                    {% csrf_token %}
+                    <div class="card-body">
+                        <div class="tab-content" id="settingsTabsContent">
+                            <!-- TAB 1: Visual Identity -->
+                            <div class="tab-pane fade show active" id="identity" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">اسم الجامعة/الكلية الأساسي</label>
+                                        {{ form.university_name }}
+                                        <div class="form-text small">يظهر كعنوان رئيسي في الشريط الجانبي والتقارير المطبوعة.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">اسم الكلية الفرعي</label>
+                                        {{ form.college_name }}
+                                        <div class="form-text small">يظهر كعنوان ثانوي للقسم أو التسجيل العام.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">لون الهوية البصرية الأساسي (Theme Color)</label>
+                                        {{ form.header_color }}
+                                        <div class="form-text small">يحدد لون شريط النظام، القائمة الجانبية، الأزرار، والـ PDF المعتمد تلقائياً!</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">شعار الجامعة المعتمد</label>
+                                        {{ form.logo }}
+                                        <div class="form-text small">شعار بخلفية شفافة (PNG) يظهر في أعلى القائمة والـ PDF.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 2: Contact Info -->
+                            <div class="tab-pane fade" id="contact" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">البريد الإلكتروني للتواصل</label>
+                                        {{ form.contact_email }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">رقم هاتف التواصل</label>
+                                        {{ form.contact_phone }}
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold">العنوان الكامل لمقر الجامعة/الكلية</label>
+                                        {{ form.address }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-white border-top p-4 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                            <i class="fas fa-save me-2"></i>حفظ وتطبيق إعدادات الهوية
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inputs & Previews
+    const univInput = document.querySelector('input[name="university_name"]');
+    const collInput = document.querySelector('input[name="college_name"]');
+    const colorInput = document.querySelector('input[name="header_color"]');
+    const logoInput = document.querySelector('input[name="logo"]');
+    
+    const previewUniv = document.getElementById('previewUnivName');
+    const previewColl = document.getElementById('previewCollName');
+    const previewBrandIcon = document.getElementById('previewBrandIcon');
+    const previewActiveNav = document.getElementById('previewActiveNavItem');
+    const previewAvatar = document.getElementById('previewAvatar');
+    const previewCardIcon = document.getElementById('previewCardIcon');
+    const previewLogoImg = document.getElementById('previewLogoImg');
+    const previewBrandLogoPlaceholder = document.getElementById('previewBrandLogoPlaceholder');
+
+    // Live update text
+    univInput.addEventListener('input', function() {
+        previewUniv.textContent = this.value || "الجامعة التقنية";
+    });
+    
+    collInput.addEventListener('input', function() {
+        previewColl.textContent = this.value || "التسجيل الجامعي";
+    });
+
+    // Live update colors
+    colorInput.addEventListener('input', function() {
+        const val = this.value;
+        previewBrandIcon.style.backgroundColor = val;
+        previewActiveNav.style.backgroundColor = val;
+        previewAvatar.style.backgroundColor = val;
+        previewCardIcon.style.background = `linear-gradient(135deg, ${val}, #7b1fa2)`;
+    });
+
+    // Live update logo file
+    logoInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewLogoImg) {
+                    previewLogoImg.src = e.target.result;
+                    previewLogoImg.style.display = 'block';
+                } else {
+                    // Create image element inside container
+                    const img = document.createElement('img');
+                    img.id = 'previewLogoImg';
+                    img.src = e.target.result;
+                    img.style.width = '14px';
+                    img.style.height = '14px';
+                    img.style.objectFit = 'contain';
+                    
+                    if (previewBrandLogoPlaceholder) {
+                        previewBrandLogoPlaceholder.style.display = 'none';
+                    }
+                    previewBrandIcon.appendChild(img);
+                }
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+});
+</script>
+{% endblock %}

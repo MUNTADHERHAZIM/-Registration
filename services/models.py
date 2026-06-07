@@ -80,6 +80,10 @@ class StudentRequest(models.Model):
         max_length=20, choices=STATUS_CHOICES,
         default='new', verbose_name='حالة الطلب'
     )
+    assigned_to = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='assigned_requests', verbose_name='المكلف بالمهمة'
+    )
     admin_notes = models.TextField(verbose_name='ملاحظات الإدارة', blank=True)
     reviewed_by = models.CharField(
         max_length=200, verbose_name='تمت المراجعة بواسطة', blank=True

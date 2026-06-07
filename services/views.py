@@ -208,3 +208,284 @@ def handler404(request, exception):
 def handler500(request):
     """Custom 500 error page"""
     return render(request, '500.html', status=500)
+
+
+# ============================================================
+# QR CODE SECURE DOCUMENT VERIFICATION SYSTEM
+# ============================================================
+
+import os
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+font_registered = False
+
+def get_arabic_font_name():
+    global font_registered
+    if font_registered:
+        return 'ArabicFont'
+        
+    # List of possible paths to an Arabic-supporting TTF font on Windows/Linux
+    possible_paths = [
+        r'C:\Windows\Fonts\arial.ttf',
+        r'C:\Windows\Fonts\tahoma.ttf',
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf',
+        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            try:
+                pdfmetrics.registerFont(TTFont('ArabicFont', path))
+                font_registered = True
+                return 'ArabicFont'
+            except Exception:
+                continue
+                
+    # Fallback if no TTF found
+    return 'Helvetica'
+
+
+def fix_arabic(text):
+    from arabic_reshaper import reshape
+    from bidi.algorithm import get_display
+    if not text:
+        return ""
+    return get_display(reshape(str(text)))
+
+
+def verify_request_document(request, tracking):
+    """
+    Publicly accessible unauthenticated document verification page.
+    Checks the validity of the document via tracking number.
+    """
+    from services.models import StudentRequest
+    
+    student_request = StudentRequest.objects.filter(tracking_number=tracking).first()
+    
+    # Document is valid if found and status is 'approved' or 'completed'
+    is_valid = student_request is not None and student_request.status in ['approved', 'completed']
+    
+    context = {
+        'req': student_request,
+        'is_valid': is_valid,
+        'tracking_number': tracking,
+        'title': f'التحقق من صحة المستند: {tracking}',
+    }
+    return render(request, 'services/verify_document.html', context)
+
+
+def generate_request_pdf(request, tracking):
+    """
+    Publicly accessible but secure dynamic PDF generator.
+    Only request statuses of 'approved' or 'completed' are allowed to download official documents.
+    """
+    from django.http import HttpResponseForbidden, HttpResponse
+    from services.models import StudentRequest
+    from core.models import SystemSettings
+    import io
+    
+    student_request = get_object_or_404(StudentRequest, tracking_number=tracking)
+    
+    # Security Check: Only allow generating PDF if status is approved or completed
+    if student_request.status not in ['approved', 'completed']:
+        return HttpResponseForbidden("<h3>عذراً، هذه الوثيقة غير معتمدة أو لم تتم الموافقة عليها بعد من قبل إدارة التسجيل.</h3>")
+    
+    # Setup document settings
+    settings_obj = SystemSettings.objects.first()
+    univ_name = settings_obj.university_name if settings_obj else "الجامعة التقنية"
+    coll_name = settings_obj.college_name if settings_obj else "إدارة التسجيل الجامعي"
+    theme_color = settings_obj.header_color if settings_obj else "#1a237e"
+    
+    # Generate in-memory PDF
+    buffer = io.BytesIO()
+    
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    from reportlab.lib import colors
+    import qrcode
+    
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        rightMargin=2*cm, leftMargin=2*cm,
+        topMargin=1.5*cm, bottomMargin=1.5*cm
+    )
+    
+    styles = getSampleStyleSheet()
+    
+    # Get registered Arabic font
+    font_name = get_arabic_font_name()
+    
+    # Define styled styles with Arabic font
+    title_style = ParagraphStyle(
+        'ArabicTitle', parent=styles['Normal'],
+        fontName=font_name, fontSize=18, leading=22,
+        textColor=colors.HexColor(theme_color),
+        alignment=TA_CENTER, spaceAfter=20
+    )
+    body_style = ParagraphStyle(
+        'ArabicBody', parent=styles['Normal'],
+        fontName=font_name, fontSize=12, leading=20,
+        alignment=TA_RIGHT, spaceAfter=12
+    )
+    meta_style = ParagraphStyle(
+        'ArabicMeta', parent=styles['Normal'],
+        fontName=font_name, fontSize=10, leading=14,
+        textColor=colors.HexColor('#64748b'),
+        alignment=TA_RIGHT
+    )
+    center_style = ParagraphStyle(
+        'ArabicCenter', parent=styles['Normal'],
+        fontName=font_name, fontSize=11, leading=15,
+        alignment=TA_CENTER
+    )
+    header_title_style = ParagraphStyle(
+        'HeaderTitle', parent=styles['Normal'],
+        fontName=font_name, fontSize=14, leading=18,
+        textColor=colors.white, alignment=TA_CENTER
+    )
+    
+    elements = []
+    
+    # --- Header Banner Table (Dark Theme Color) ---
+    univ_reshaped = fix_arabic(univ_name)
+    coll_reshaped = fix_arabic(coll_name)
+    dept_label = fix_arabic("قسم التسجيل وشؤون الطلاب")
+    
+    header_data = [
+        [
+            Paragraph(f"<b>{univ_reshaped}</b><br/>{coll_reshaped}<br/>{dept_label}", header_title_style)
+        ]
+    ]
+    header_table = Table(header_data, colWidths=[17*cm])
+    header_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(theme_color)),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 15),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ('TOPPADDING', (0, 0), (-1, -1), 15),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 1*cm))
+    
+    # Document Metadata Block (Tracking, Issue Date)
+    issue_date = student_request.updated_at.strftime('%Y/%m/%d')
+    meta_text = f"الرقم التتبعي: {student_request.tracking_number} | تاريخ الإصدار: {issue_date} | رمز التحقق الإلكتروني"
+    elements.append(Paragraph(fix_arabic(meta_text), meta_style))
+    elements.append(Spacer(1, 0.5*cm))
+    
+    # Document Content Title and Body
+    doc_title = ""
+    doc_body = ""
+    
+    req_type = student_request.request_type
+    student_name = student_request.student_name
+    dept_name = student_request.department.name if student_request.department else ""
+    level_display = student_request.get_level_display()
+    
+    if req_type == 'confirmation':
+        doc_title = "تأييد استمرار بالدراسة"
+        doc_body = (
+            f"إلى من يهمه الأمر،\n\n"
+            f"نؤيد أن الطالب {student_name} "
+            f"هو أحد طلابنا المستمرين بالدراسة في {univ_name} - {coll_name}، "
+            f"قسم {dept_name}، وهو مسجل في {level_display} للعام الدراسي الحالي. "
+            f"وقد أُعطي هذا التأييد بناءً على طلبه لتقديمه للجهات الرسمية المعنية."
+        )
+    elif req_type == 'graduation_doc':
+        doc_title = "وثيقة تخرج مؤقتة"
+        doc_body = (
+            f"إلى من يهمه الأمر،\n\n"
+            f"نؤيد أن الطالب {student_name} "
+            f"قد تخرج بنجاح من {univ_name} - {coll_name}، "
+            f"قسم {dept_name}، وحصل على شهادة البكالوريوس بتقدير مستحق بعد إتمام كافة المتطلبات الأكاديمية. "
+            f"وقد أُعطيت هذه الوثيقة بناءً على طلبه لتقديمها إلى من يهمه الأمر."
+        )
+    elif req_type == 'transcript':
+        doc_title = "بيان الدرجات الأكاديمية"
+        doc_body = (
+            f"إلى من يهمه الأمر،\n\n"
+            f"نؤيد صحة درجات الطالب {student_name} "
+            f"المقيد في قسم {dept_name}، مرحلة {level_display}. "
+            f"بيان تفصيلي بتقديراته ومعدله التراكمي مسجل رسمياً في إدارة شؤون الطلاب."
+        )
+    else:
+        doc_title = student_request.get_request_type_display()
+        doc_body = (
+            f"إلى من يهمه الأمر،\n\n"
+            f"بناءً على الطلب المقدم من الطالب {student_name} "
+            f"المسجل في قسم {dept_name}، {level_display}، "
+            f"نؤيد أن حالته الدراسية والأكاديمية معتمدة رسمياً وموثقة لدى عمادة الكلية."
+        )
+    
+    elements.append(Paragraph(fix_arabic(doc_title), title_style))
+    elements.append(Spacer(1, 0.5*cm))
+    
+    for line in doc_body.split('\n'):
+        if line.strip():
+            elements.append(Paragraph(fix_arabic(line.strip()), body_style))
+    
+    elements.append(Spacer(1, 2*cm))
+    
+    # --- Bottom Block: Signature on Left, QR Code on Right ---
+    verify_url = f"http://{request.get_host()}/services/verify/{student_request.tracking_number}/"
+    
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=2,
+    )
+    qr.add_data(verify_url)
+    qr.make(fit=True)
+    
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    qr_io = io.BytesIO()
+    qr_img.save(qr_io, format='PNG')
+    qr_io.seek(0)
+    
+    from reportlab.platypus import Image as RLImage
+    rl_qr_img = RLImage(qr_io, width=3*cm, height=3*cm)
+    
+    signature_text = fix_arabic("عمادة الكلية وشؤون الطلاب")
+    director_title = fix_arabic("مدير قسم التسجيل العام")
+    seal_text = fix_arabic("وثيقة إلكترونية مؤمنة لا تحتاج إلى ختم يدوي")
+    
+    bottom_left_data = [
+        [Paragraph(f"<b>{signature_text}</b>", center_style)],
+        [Spacer(1, 0.2*cm)],
+        [Paragraph(director_title, center_style)],
+        [Spacer(1, 1.2*cm)],
+        [Paragraph(f"<font size=8 color='#94a3b8'>{seal_text}</font>", center_style)]
+    ]
+    bottom_left_table = Table(bottom_left_data, colWidths=[9*cm])
+    bottom_left_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    bottom_layout_data = [
+        [rl_qr_img, bottom_left_table]
+    ]
+    bottom_table = Table(bottom_layout_data, colWidths=[4*cm, 13*cm])
+    bottom_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    elements.append(bottom_table)
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Document_{student_request.tracking_number}.pdf"'
+    return response
+

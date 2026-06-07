@@ -22,9 +22,12 @@ urlpatterns = [
     path('preliminary/activate/', views.activate_students, name='activate_students'),
     path('promote/', views.student_promote, name='student_promote'),
     path('api/students/search/', views.api_students_search, name='api_students_search'),
+    path('students/batch-upload/', views.batch_upload_documents, name='batch_upload_documents'),
+    path('students/batch-upload/confirm/', views.confirm_batch_upload, name='confirm_batch_upload'),
     
     # Notes & Documents Management
     path('students/<int:pk>/add-note/', views.add_student_note, name='add_student_note'),
     path('notes/<int:pk>/delete/', views.delete_student_note, name='delete_student_note'),
     path('documents/<int:pk>/delete/', views.delete_student_document, name='delete_student_document'),
+    path('students/<int:pk>/whatsapp/', views.student_whatsapp_redirect, name='student_whatsapp_redirect'),
 ]

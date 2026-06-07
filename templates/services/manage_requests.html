@@ -96,6 +96,7 @@
                             <th>نوع الطلب</th>
                             <th>الطالب</th>
                             <th>الهاتف</th>
+                            <th>المكلف</th>
                             <th>الحالة</th>
                             <th>التاريخ</th>
                             <th>الإجراءات</th>
@@ -117,6 +118,13 @@
                                 {% endif %}
                             </td>
                             <td dir="ltr" style="font-size:13px;">{{ req.phone }}</td>
+                            <td>
+                                {% if req.assigned_to %}
+                                    <span class="badge bg-secondary"><i class="fas fa-user-tie me-1"></i>{{ req.assigned_to.get_full_name|default:req.assigned_to.username }}</span>
+                                {% else %}
+                                    <span class="text-muted" style="font-size:12px;">غير محدد</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="badge bg-{{ req.get_status_color }}">
                                     <i class="fas {{ req.get_status_icon }} me-1"></i>{{ req.get_status_display }}
