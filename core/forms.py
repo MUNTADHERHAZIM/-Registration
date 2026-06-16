@@ -14,3 +14,18 @@ class SystemSettingsForm(forms.ModelForm):
             'contact_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '077XXXXXXXX'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'العنوان الكامل للجامعة'}),
         }
+
+
+from .models import DynamicChoice
+
+class DynamicChoiceForm(forms.ModelForm):
+    class Meta:
+        model = DynamicChoice
+        fields = ['category', 'value', 'display_name', 'is_active']
+        widgets = {
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'مثال: basra'}),
+            'display_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'مثال: البصرة'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+

@@ -6,6 +6,51 @@
 {% endblock %}
 {% block content %}
 <div class="fade-in">
+    <!-- Quick navigation controls -->
+    <div class="card mb-3 py-2 px-3 border-0 bg-white shadow-sm" style="border-radius:12px;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'student_list' %}" class="btn btn-outline-secondary btn-sm" title="الرجوع للقائمة">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <span class="text-muted fw-bold" style="font-size:13px;">التنقل السريع بين الطلاب:</span>
+            </div>
+            
+            <!-- Dropdown search -->
+            <div class="quick-nav-select" style="min-width: 300px;">
+                <select id="quick-student-nav" class="form-select form-select-sm select2-admin">
+                    <option value="">بحث وانتقال سريع لطالب آخر...</option>
+                    {% for s in all_students %}
+                    <option value="{% url 'student_detail' s.pk %}" {% if s.pk == student.pk %}selected{% endif %}>{{ s.student_id }} - {{ s.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Next / Prev Buttons -->
+            <div class="btn-group">
+                {% if prev_student %}
+                <a href="{% url 'student_detail' prev_student.pk %}" class="btn btn-outline-primary btn-sm px-3" title="الطالب السابق">
+                    <i class="fas fa-chevron-right me-1"></i> السابق
+                </a>
+                {% else %}
+                <button class="btn btn-outline-secondary btn-sm px-3" disabled>
+                    <i class="fas fa-chevron-right me-1"></i> السابق
+                </button>
+                {% endif %}
+                
+                {% if next_student %}
+                <a href="{% url 'student_detail' next_student.pk %}" class="btn btn-outline-primary btn-sm px-3" title="الطالب التالي">
+                    التالي <i class="fas fa-chevron-left ms-1"></i>
+                </a>
+                {% else %}
+                <button class="btn btn-outline-secondary btn-sm px-3" disabled>
+                    التالي <i class="fas fa-chevron-left ms-1"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
 <div class="row g-3">
     <!-- Left: Profile Card -->
     <div class="col-lg-3">
@@ -15,7 +60,7 @@
                 <img src="{{ student.photo.url }}" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover;border:3px solid var(--primary)" alt="">
                 {% else %}
                 <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width:100px;height:100px;background:linear-gradient(135deg,var(--primary),var(--primary-light));font-size:36px;font-weight:800;color:white">
-                    {{ student.first_name|first }}{{ student.last_name|first }}
+                    {{ student.first_name|default:""|first }}{{ student.last_name|default:""|first }}
                 </div>
                 {% endif %}
                 <h5 class="fw-bold mb-1">{{ student.full_name }}</h5>
@@ -122,19 +167,25 @@
             </div>
             <div class="card-body tab-content" id="studentTabsContent">
 
-                <!-- Extended Data Tab -->
                 <div class="tab-pane fade" id="extendedTab">
                     <div class="row g-4">
                         <div class="col-md-6">
                             <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">البيانات الأساسية</h6>
                             <table class="table table-sm table-borderless">
-                                <tr><td class="text-muted" style="width:140px;">اللقب:</td><td class="fw-bold">{{ student.surname|default:"—" }}</td></tr>
+                                <tr><td class="text-muted" style="width:140px;">الاسم الأول:</td><td class="fw-bold text-primary">{{ student.first_name }}</td></tr>
+                                <tr><td class="text-muted">اسم الأب:</td><td class="fw-bold">{{ student.second_name }}</td></tr>
+                                <tr><td class="text-muted">اسم الجد:</td><td class="fw-bold">{{ student.third_name }}</td></tr>
+                                <tr><td class="text-muted">الاسم الرابع:</td><td class="fw-bold">{{ student.last_name|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">اللقب:</td><td class="fw-bold">{{ student.surname|default:"—" }}</td></tr>
                                 <tr><td class="text-muted">اسم الأم:</td><td class="fw-bold">{{ student.mother_name|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">القومية:</td><td class="fw-bold">{{ student.ethnicity|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">محل الولادة:</td><td class="fw-bold">{{ student.birth_place|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الجنسية:</td><td class="fw-bold">{{ student.citizenship|default:"—" }}</td></tr>
                                 <tr><td class="text-muted">الرقم الامتحاني:</td><td class="fw-bold">{{ student.exam_number|default:"—" }}</td></tr>
-                                <tr><td class="text-muted">الديانة:</td><td class="fw-bold">{{ student.religion|default:"—" }}</td></tr>
-                                <tr><td class="text-muted">الحالة الزوجية:</td><td class="fw-bold">{{ student.marital_status|default:"—" }}</td></tr>
-                                <tr><td class="text-muted">الحالة الصحية:</td><td class="fw-bold">{{ student.health_status|default:"—" }}</td></tr>
-                                <tr><td class="text-muted">حالة الطالب:</td><td class="fw-bold">{{ student.origin_status|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الديانة:</td><td class="fw-bold">{{ student.get_religion_display|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الحالة الزوجية:</td><td class="fw-bold">{{ student.get_marital_status_display|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الحالة الصحية:</td><td class="fw-bold">{{ student.get_health_status_display|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">حالة الطالب:</td><td class="fw-bold">{{ student.get_origin_status_display|default:"—" }}</td></tr>
                             </table>
                         </div>
                         <div class="col-md-6">
@@ -143,10 +194,11 @@
                                 <tr><td class="text-muted" style="width:140px;">سنة التخرج:</td><td class="fw-bold">{{ student.grad_year_str|default:"—" }}</td></tr>
                                 <tr><td class="text-muted">المدرسة:</td><td class="fw-bold">{{ student.school_name|default:"—" }}</td></tr>
                                 <tr><td class="text-muted">الفرع:</td><td class="fw-bold">{{ student.branch|default:"—" }}</td></tr>
-                                <tr><td class="text-muted">الدور:</td><td class="fw-bold">{{ student.admission_round|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">الدور:</td><td class="fw-bold">{{ student.get_admission_round_display|default:"—" }}</td></tr>
                                 <tr><td class="text-muted">معدل التخرج:</td><td class="fw-bold">{{ student.avg_no_additions|default:"—" }}</td></tr>
                                 <tr><td class="text-muted">معدل القبول:</td><td class="fw-bold">{{ student.admission_avg|default:"—" }}</td></tr>
-                                <tr><td class="text-muted">قناة القبول:</td><td class="fw-bold">{{ student.admission_channel|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">المجموع:</td><td class="fw-bold">{{ student.total_score|default:"—" }}</td></tr>
+                                <tr><td class="text-muted">قناة القبول:</td><td class="fw-bold">{{ student.get_admission_channel_display|default:"—" }}</td></tr>
                             </table>
                         </div>
                         <div class="col-md-12 mt-2">
@@ -164,6 +216,73 @@
                                         <tr><td class="text-muted" style="width:140px;">رقم الوصل:</td><td class="fw-bold">{{ student.receipt_number|default:"—" }}</td></tr>
                                         <tr><td class="text-muted">تاريخ الوصل:</td><td class="fw-bold">{{ student.receipt_date|date:"Y/m/d"|default:"—" }}</td></tr>
                                     </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-3">
+                            <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary"><i class="fas fa-file-signature me-1"></i>تدقيق ملف الطالب والوثائق الورقية</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded border h-100">
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <tr>
+                                                <td class="text-muted" style="width:160px;">حالة استلام الوثيقة:</td>
+                                                <td>
+                                                    {% if student.document_receipt == 'present' %}
+                                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>موجودة</span>
+                                                    {% else %}
+                                                    <span class="badge bg-danger"><i class="fas fa-times me-1"></i>غير موجودة</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% if student.document_receipt == 'present' %}
+                                            <tr>
+                                                <td class="text-muted">حالة مصادقة الوثيقة:</td>
+                                                <td>
+                                                    {% if student.document_auth == 'certified' %}
+                                                    <span class="badge bg-success"><i class="fas fa-stamp me-1"></i>مصادقة</span>
+                                                    {% else %}
+                                                    <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>غير مصادقة</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded border h-100">
+                                        <div class="fw-bold small mb-2 text-secondary"><i class="fas fa-list-check me-1"></i>جيك لست الوثائق والمستندات المطلوبة:</div>
+                                        <div class="row row-cols-1 row-cols-sm-2 g-2">
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_national_id_student %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>البطاقة الوطنية للطالب
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_national_id_father %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>البطاقة الوطنية للوالد
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_national_id_mother %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>البطاقة الوطنية للأم
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_death_certificate %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>شهادة الوفاة
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_residence_card %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>بطاقة السكن
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_personal_photos %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>الصور الشخصية
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_sponsor %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>الكفيل
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_medical_exam %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>الفحص الطبي
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas {% if student.doc_grade_confirmation %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>تأييد الدرجات
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -337,6 +456,37 @@ document.addEventListener('DOMContentLoaded', function() {
             // Also update URL hash without scrolling
             history.replaceState(null, null, target);
         });
+    });
+
+    // Quick navigation select redirect
+    const quickNav = document.getElementById('quick-student-nav');
+    if (quickNav) {
+        $(quickNav).on('change', function() {
+            if (this.value) {
+                window.location.href = this.value;
+            }
+        });
+    }
+
+    // Keyboard navigation: Left Arrow -> Next, Right Arrow -> Previous
+    document.addEventListener('keydown', function(e) {
+        // Prevent key triggers when typing in forms/inputs
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+            return;
+        }
+        
+        if (e.key === 'ArrowLeft') { // Left Arrow -> Next student (for RTL)
+            const nextBtn = document.querySelector('a[title="الطالب التالي"]');
+            if (nextBtn) {
+                nextBtn.click();
+            }
+        } else if (e.key === 'ArrowRight') { // Right Arrow -> Previous student (for RTL)
+            const prevBtn = document.querySelector('a[title="الطالب السابق"]');
+            if (prevBtn) {
+                prevBtn.click();
+            }
+        }
     });
 });
 </script>

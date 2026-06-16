@@ -56,3 +56,67 @@ class AdmissionGuide(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class DynamicChoice(models.Model):
+    CATEGORY_CHOICES = [
+        ('governorate', 'المحافظات'),
+        ('religion', 'الأديان'),
+        ('health_status', 'الحالة الصحية'),
+        ('branch', 'الفروع الدراسية'),
+        ('origin_status', 'حالة الطالب أصيل/وافد'),
+        ('admission_channel', 'قنوات القبول'),
+        ('marital_status', 'الحالة الزوجية'),
+        ('gender', 'الجنس'),
+        ('level', 'المراحل الدراسية'),
+        ('study_type', 'نوع الدراسة'),
+        ('status', 'حالة الطالب (نشط/موقوف/إلخ)'),
+        ('citizenship', 'الجنسية'),
+        ('birth_place', 'محل الولادة'),
+    ]
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, verbose_name="الفئة")
+    value = models.CharField(max_length=100, verbose_name="القيمة (بالقاعدة)")
+    display_name = models.CharField(max_length=150, verbose_name="الاسم المعروض")
+    is_active = models.BooleanField(default=True, verbose_name="نشط")
+
+    class Meta:
+        verbose_name = "خيار ديناميكي"
+        verbose_name_plural = "الخيارات الديناميكية"
+        unique_together = ['category', 'value']
+        ordering = ['category', 'display_name']
+
+    def __str__(self):
+        return f"[{self.get_category_display()}] {self.display_name}"
+
+
+def get_dynamic_choices(category, default_choices):
+    try:
+        db_choices = list(DynamicChoice.objects.filter(category=category))
+        if not db_choices:
+            return default_choices
+            
+        db_map = {choice.value: choice for choice in db_choices}
+        final_choices = []
+        
+        for val, display in default_choices:
+            if val == '':
+                final_choices.append((val, display))
+                continue
+                
+            if val in db_map:
+                choice = db_map[val]
+                if choice.is_active:
+                    final_choices.append((val, choice.display_name))
+            else:
+                final_choices.append((val, display))
+                
+        default_vals = {c[0] for c in default_choices}
+        for choice in db_choices:
+            if choice.value not in default_vals and choice.is_active:
+                final_choices.append((choice.value, choice.display_name))
+                
+        return final_choices
+    except Exception:
+        pass
+    return default_choices
+

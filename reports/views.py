@@ -105,8 +105,25 @@ def students_report(request):
     level = request.GET.get('level', '')
     status = request.GET.get('status', 'active')
     gender = request.GET.get('gender', '')
+    search = request.GET.get('q', '')
+    study_filter = request.GET.get('study_type', '')
+    doc_receipt_filter = request.GET.get('doc_receipt', '')
+    doc_auth_filter = request.GET.get('doc_auth', '')
 
     students = Student.objects.select_related('department', 'entry_year')
+    
+    # Search
+    if search:
+        students = students.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(second_name__icontains=search) |
+            Q(third_name__icontains=search) |
+            Q(student_id__icontains=search) |
+            Q(national_id__icontains=search) |
+            Q(phone__icontains=search)
+        )
+        
     if dept_id:
         students = students.filter(department_id=dept_id)
     if level:
@@ -115,6 +132,67 @@ def students_report(request):
         students = students.filter(status=status)
     if gender:
         students = students.filter(gender=gender)
+    if study_filter:
+        students = students.filter(study_type=study_filter)
+    if doc_receipt_filter:
+        students = students.filter(document_receipt=doc_receipt_filter)
+    if doc_auth_filter:
+        students = students.filter(document_auth=doc_auth_filter)
+
+    # Document Checklist Filters
+    doc_student = request.GET.get('doc_student', '')
+    if doc_student == 'true':
+        students = students.filter(doc_national_id_student=True)
+    elif doc_student == 'false':
+        students = students.filter(doc_national_id_student=False)
+
+    doc_father = request.GET.get('doc_father', '')
+    if doc_father == 'true':
+        students = students.filter(doc_national_id_father=True)
+    elif doc_father == 'false':
+        students = students.filter(doc_national_id_father=False)
+
+    doc_mother = request.GET.get('doc_mother', '')
+    if doc_mother == 'true':
+        students = students.filter(doc_national_id_mother=True)
+    elif doc_mother == 'false':
+        students = students.filter(doc_national_id_mother=False)
+
+    doc_residence = request.GET.get('doc_residence', '')
+    if doc_residence == 'true':
+        students = students.filter(doc_residence_card=True)
+    elif doc_residence == 'false':
+        students = students.filter(doc_residence_card=False)
+
+    doc_photos = request.GET.get('doc_photos', '')
+    if doc_photos == 'true':
+        students = students.filter(doc_personal_photos=True)
+    elif doc_photos == 'false':
+        students = students.filter(doc_personal_photos=False)
+
+    doc_sponsor = request.GET.get('doc_sponsor', '')
+    if doc_sponsor == 'true':
+        students = students.filter(doc_sponsor=True)
+    elif doc_sponsor == 'false':
+        students = students.filter(doc_sponsor=False)
+
+    doc_medical = request.GET.get('doc_medical', '')
+    if doc_medical == 'true':
+        students = students.filter(doc_medical_exam=True)
+    elif doc_medical == 'false':
+        students = students.filter(doc_medical_exam=False)
+
+    doc_grade = request.GET.get('doc_grade', '')
+    if doc_grade == 'true':
+        students = students.filter(doc_grade_confirmation=True)
+    elif doc_grade == 'false':
+        students = students.filter(doc_grade_confirmation=False)
+
+    doc_death = request.GET.get('doc_death', '')
+    if doc_death == 'true':
+        students = students.filter(doc_death_certificate=True)
+    elif doc_death == 'false':
+        students = students.filter(doc_death_certificate=False)
 
     selected_fields = request.GET.getlist('fields')
     if not selected_fields:
@@ -152,6 +230,21 @@ def students_report(request):
         ('admission_channel', 'قناة القبول'),
         ('entry_year', 'سنة القبول'),
         ('study_type', 'نوع الدراسة'),
+        ('ethnicity', 'القومية'),
+        ('birth_place', 'محل الولادة'),
+        ('citizenship', 'الجنسية'),
+        ('total_score', 'المجموع'),
+        ('document_receipt', 'استلام الوثيقة'),
+        ('document_auth', 'مصادقة الوثيقة'),
+        ('doc_national_id_student', 'البطاقة الوطنية للطالب'),
+        ('doc_national_id_father', 'البطاقة الوطنية للأب'),
+        ('doc_national_id_mother', 'البطاقة الوطنية للأم'),
+        ('doc_residence_card', 'بطاقة السكن'),
+        ('doc_personal_photos', 'الصور الشخصية'),
+        ('doc_sponsor', 'الكفيل'),
+        ('doc_medical_exam', 'الفحص الطبي'),
+        ('doc_grade_confirmation', 'تأييد الدرجات'),
+        ('doc_death_certificate', 'شهادة الوفاة'),
     ]
 
     return render(request, 'reports/students_report.html', {
@@ -202,6 +295,21 @@ def export_students_pdf(students, request, selected_fields):
         'guardian_phone': 'رقم ولي الأمر',
         'admission_channel': 'قناة القبول',
         'entry_year': 'سنة القبول',
+        'ethnicity': 'القومية',
+        'birth_place': 'محل الولادة',
+        'citizenship': 'الجنسية',
+        'total_score': 'المجموع',
+        'document_receipt': 'استلام الوثيقة',
+        'document_auth': 'مصادقة الوثيقة',
+        'doc_national_id_student': 'البطاقة الوطنية للطالب',
+        'doc_national_id_father': 'البطاقة الوطنية للأب',
+        'doc_national_id_mother': 'البطاقة الوطنية للأم',
+        'doc_residence_card': 'بطاقة السكن',
+        'doc_personal_photos': 'الصور الشخصية',
+        'doc_sponsor': 'الكفيل',
+        'doc_medical_exam': 'الفحص الطبي',
+        'doc_grade_confirmation': 'تأييد الدرجات',
+        'doc_death_certificate': 'شهادة الوفاة',
     }
     
     headers = ['#'] + [all_fields[f] for f in selected_fields if f in all_fields]
@@ -221,6 +329,22 @@ def export_students_pdf(students, request, selected_fields):
             elif f == 'guardian_phone': row.append(s.guardian_phone or '')
             elif f == 'admission_channel': row.append(s.get_admission_channel_display() if hasattr(s, 'get_admission_channel_display') else s.admission_channel or '')
             elif f == 'entry_year': row.append(s.entry_year.year)
+            elif f == 'ethnicity': row.append(s.ethnicity or '')
+            elif f == 'birth_place': row.append(s.birth_place or '')
+            elif f == 'citizenship': row.append(s.citizenship or '')
+            elif f == 'total_score': row.append(str(s.total_score) if s.total_score is not None else '')
+            elif f == 'document_receipt': row.append(s.get_document_receipt_display() if hasattr(s, 'get_document_receipt_display') else s.document_receipt or '')
+            elif f == 'document_auth': row.append(s.get_document_auth_display() if hasattr(s, 'get_document_auth_display') else s.document_auth or '')
+            elif f == 'doc_national_id_student': row.append('موجود' if s.doc_national_id_student else 'غير موجود')
+            elif f == 'doc_national_id_father': row.append('موجود' if s.doc_national_id_father else 'غير موجود')
+            elif f == 'doc_national_id_mother': row.append('موجود' if s.doc_national_id_mother else 'غير موجود')
+            elif f == 'doc_residence_card': row.append('موجود' if s.doc_residence_card else 'غير موجود')
+            elif f == 'doc_personal_photos': row.append('موجود' if s.doc_personal_photos else 'غير موجود')
+            elif f == 'doc_sponsor': row.append('موجود' if s.doc_sponsor else 'غير موجود')
+            elif f == 'doc_medical_exam': row.append('موجود' if s.doc_medical_exam else 'غير موجود')
+            elif f == 'doc_grade_confirmation': row.append('موجود' if s.doc_grade_confirmation else 'غير موجود')
+            elif f == 'doc_death_certificate': row.append('موجود' if s.doc_death_certificate else 'غير موجود')
+
         data.append(row)
 
     table = Table(data, repeatRows=1)
@@ -270,6 +394,21 @@ def export_students_excel(students, selected_fields):
         'admission_channel': 'قناة القبول',
         'entry_year': 'سنة القبول',
         'study_type': 'نوع الدراسة',
+        'ethnicity': 'القومية',
+        'birth_place': 'محل الولادة',
+        'citizenship': 'الجنسية',
+        'total_score': 'المجموع',
+        'document_receipt': 'استلام الوثيقة',
+        'document_auth': 'مصادقة الوثيقة',
+        'doc_national_id_student': 'البطاقة الوطنية للطالب',
+        'doc_national_id_father': 'البطاقة الوطنية للأب',
+        'doc_national_id_mother': 'البطاقة الوطنية للأم',
+        'doc_residence_card': 'بطاقة السكن',
+        'doc_personal_photos': 'الصور الشخصية',
+        'doc_sponsor': 'الكفيل',
+        'doc_medical_exam': 'الفحص الطبي',
+        'doc_grade_confirmation': 'تأييد الدرجات',
+        'doc_death_certificate': 'شهادة الوفاة',
     }
     
     headers = ['#'] + [all_fields[f] for f in selected_fields if f in all_fields]
@@ -295,6 +434,22 @@ def export_students_excel(students, selected_fields):
             elif f == 'admission_channel': row_data.append(s.get_admission_channel_display() if hasattr(s, 'get_admission_channel_display') else s.admission_channel or '')
             elif f == 'entry_year': row_data.append(s.entry_year.year)
             elif f == 'study_type': row_data.append(s.get_study_type_display())
+            elif f == 'ethnicity': row_data.append(s.ethnicity or '')
+            elif f == 'birth_place': row_data.append(s.birth_place or '')
+            elif f == 'citizenship': row_data.append(s.citizenship or '')
+            elif f == 'total_score': row_data.append(float(s.total_score) if s.total_score is not None else '')
+            elif f == 'document_receipt': row_data.append(s.get_document_receipt_display() if hasattr(s, 'get_document_receipt_display') else s.document_receipt or '')
+            elif f == 'document_auth': row_data.append(s.get_document_auth_display() if hasattr(s, 'get_document_auth_display') else s.document_auth or '')
+            elif f == 'doc_national_id_student': row_data.append('موجود' if s.doc_national_id_student else 'غير موجود')
+            elif f == 'doc_national_id_father': row_data.append('موجود' if s.doc_national_id_father else 'غير موجود')
+            elif f == 'doc_national_id_mother': row_data.append('موجود' if s.doc_national_id_mother else 'غير موجود')
+            elif f == 'doc_residence_card': row_data.append('موجود' if s.doc_residence_card else 'غير موجود')
+            elif f == 'doc_personal_photos': row_data.append('موجود' if s.doc_personal_photos else 'غير موجود')
+            elif f == 'doc_sponsor': row_data.append('موجود' if s.doc_sponsor else 'غير موجود')
+            elif f == 'doc_medical_exam': row_data.append('موجود' if s.doc_medical_exam else 'غير موجود')
+            elif f == 'doc_grade_confirmation': row_data.append('موجود' if s.doc_grade_confirmation else 'غير موجود')
+            elif f == 'doc_death_certificate': row_data.append('موجود' if s.doc_death_certificate else 'غير موجود')
+
         
         for col_idx, v in enumerate(row_data, 1):
             cell = ws.cell(row=row_idx, column=col_idx, value=v)

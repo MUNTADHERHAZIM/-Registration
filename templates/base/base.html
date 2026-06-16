@@ -310,6 +310,45 @@
             box-shadow: 0 0 0 3px rgba(57,73,171,0.15);
         }
         .form-label { font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+
+        /* ===== CHECKBOXES & RADIO BUTTONS ===== */
+        .form-check {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin-bottom: 8px;
+            text-align: right;
+        }
+        .form-check-input {
+            float: none !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border) !important;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .form-check-input:checked {
+            background-color: var(--primary) !important;
+            border-color: var(--primary) !important;
+        }
+        .form-check-input:focus {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+            border-color: var(--primary-light) !important;
+        }
+        .form-check-label {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13.5px;
+            user-select: none;
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
         /* ===== BADGES ===== */
         .badge { font-family: 'Cairo', sans-serif; font-size: 11px; border-radius: 6px; padding: 4px 8px; }
         /* ===== ALERTS ===== */
@@ -394,7 +433,7 @@
 
         /* ===== MANDATORY FIELDS ===== */
         .asteriskField { color: var(--danger); font-weight: bold; margin-right: 4px; }
-        .requiredField:after { content: ' *'; color: var(--danger); font-weight: bold; }
+        /* .requiredField:after { content: ' *'; color: var(--danger); font-weight: bold; } */
         label.required:after { content: ' *'; color: var(--danger); font-weight: bold; }
 
         /* ===== GLOBAL SEARCH ===== */
@@ -467,6 +506,12 @@
             <span>ترحيل الطلاب</span>
         </a>
         {% if user.is_superuser %}
+        <a href="{% url 'student_import_export' %}" class="nav-item-link {% if request.resolver_match.url_name == 'student_import_export' %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-file-excel text-success"></i></div>
+            <span>استيراد وتصدير</span>
+        </a>
+        {% endif %}
+        {% if user.is_superuser %}
         <a href="{% url 'batch_upload_documents' %}" class="nav-item-link {% if 'batch_upload' in request.resolver_match.url_name %}active{% endif %}">
             <div class="nav-icon"><i class="fas fa-file-upload text-warning"></i></div>
             <span>رفع وثائق بالدفعة</span>
@@ -507,14 +552,18 @@
             <div class="nav-icon"><i class="fas fa-calendar-week"></i></div>
             <span>الفصول الدراسية</span>
         </a>
+        {% if user.is_superuser %}
         <a href="{% url 'system_log' %}" class="nav-item-link {% if request.resolver_match.url_name == 'system_log' %}active{% endif %}">
             <div class="nav-icon"><i class="fas fa-history"></i></div>
             <span>سجل النظام</span>
         </a>
-        {% if user.is_superuser %}
         <a href="{% url 'system_settings' %}" class="nav-item-link {% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}">
             <div class="nav-icon"><i class="fas fa-sliders-h text-primary"></i></div>
             <span>إعدادات النظام</span>
+        </a>
+        <a href="{% url 'dynamic_choices' %}" class="nav-item-link {% if request.resolver_match.url_name == 'dynamic_choices' %}active{% endif %}">
+            <div class="nav-icon"><i class="fas fa-list-ul text-success"></i></div>
+            <span>تخصيص القوائم والخيارات</span>
         </a>
         <a href="{% url 'user_list' %}" class="nav-item-link">
             <div class="nav-icon"><i class="fas fa-users-cog"></i></div>

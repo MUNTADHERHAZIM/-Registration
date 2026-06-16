@@ -1,6 +1,12 @@
 from django.db import models
 from django.utils import timezone
+from django.core.validators import RegexValidator
 import datetime
+
+phone_validator = RegexValidator(
+    regex=r'^\d{11}$',
+    message='رقم الهاتف يجب أن يتكون من 11 رقماً فقط (مثل: 07701234567).'
+)
 
 
 class Department(models.Model):
@@ -128,6 +134,8 @@ class Student(models.Model):
         ('دهوك', 'دهوك'),
         ('حلبجة', 'حلبجة'),
     ]
+    BIRTH_PLACE_CHOICES = GOVERNORATE_CHOICES + [('خارج العراق', 'خارج العراق')]
+
     RELIGION_CHOICES = [
         ('muslim', 'مسلم'),
         ('christian', 'مسيحي'),
@@ -168,13 +176,15 @@ class Student(models.Model):
         ('اصيل', 'أصيل'),
         ('وافد', 'وافد'),
     ]
+    CITIZENSHIP_CHOICES = [
+        ('عراقي', 'عراقي'),
+        ('أجنبي', 'أجنبي'),
+    ]
 
     ADMISSION_CHANNEL_CHOICES = [
-        ('central', 'مركزي'),
-        ('parallel', 'موازي'),
-        ('private', 'أهلي'),
+        ('general', 'عامة'),
+        ('social_care', 'رعاية اجتماعية'),
         ('evening', 'مسائي'),
-        ('direct', 'مباشر'),
         ('martyrs', 'ذوي الشهداء'),
         ('talented', 'المتميزين'),
         ('other', 'أخرى'),
@@ -184,7 +194,7 @@ class Student(models.Model):
     first_name = models.CharField(max_length=100, verbose_name='الاسم الأول')
     second_name = models.CharField(max_length=100, verbose_name='اسم الأب')
     third_name = models.CharField(max_length=100, verbose_name='اسم الجد')
-    last_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='الكنية')
+    last_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='الاسم الرابع')
     
     # New fields requested
     exam_number = models.CharField(max_length=50, blank=True, null=True, verbose_name='الرقم الامتحاني')
@@ -202,10 +212,10 @@ class Student(models.Model):
     receipt_number = models.CharField(max_length=50, blank=True, null=True, verbose_name='رقم الوصل')
     receipt_date = models.DateField(null=True, blank=True, verbose_name='تاريخ الوصل')
     registration_date = models.DateField(null=True, blank=True, verbose_name='تاريخ التسجيل')
-    archive_locker = models.CharField(max_length=100, blank=True, null=True, verbose_name='موقع الأرشيف الورقي (الوكر/الدرج)')
+    archive_locker = models.CharField(max_length=100, blank=True, null=True, verbose_name='موقع الأرشيف الورقي (اللوكر/الخزانة)')
     
     # New Fields
-    guardian_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='رقم ولي الأمر')
+    guardian_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='رقم ولي الأمر', validators=[phone_validator])
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, verbose_name='نسبة التخفيض (%)')
     
     school_name = models.CharField(max_length=200, blank=True, null=True, verbose_name='اسم المدرسة')
@@ -216,10 +226,40 @@ class Student(models.Model):
     surname = models.CharField(max_length=100, blank=True, null=True, verbose_name='اللقب')
     religion = models.CharField(max_length=50, choices=RELIGION_CHOICES, blank=True, null=True, verbose_name='الديانة')
     
+    ethnicity = models.CharField(max_length=100, blank=True, null=True, verbose_name='القومية')
+    birth_place = models.CharField(max_length=150, choices=BIRTH_PLACE_CHOICES, blank=True, null=True, verbose_name='محل الولادة')
+    citizenship = models.CharField(max_length=100, choices=CITIZENSHIP_CHOICES, blank=True, null=True, verbose_name='الجنسية')
+    total_score = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name='المجموع')
+    
+    # Document Receipt and Auth Status
+    document_receipt = models.CharField(
+        max_length=20, 
+        choices=[('present', 'موجودة'), ('not_present', 'غير موجودة')], 
+        default='not_present', 
+        verbose_name='استلام الوثيقة'
+    )
+    document_auth = models.CharField(
+        max_length=20, 
+        choices=[('certified', 'مصادقة'), ('not_certified', 'غير مصادقة')], 
+        blank=True, null=True, 
+        verbose_name='مصادقة الوثيقة'
+    )
+    
+    # Document Checklist (BooleanFields)
+    doc_national_id_student = models.BooleanField(default=False, verbose_name='البطاقة الوطنية للطالب')
+    doc_national_id_father = models.BooleanField(default=False, verbose_name='البطاقة الوطنية للأب')
+    doc_national_id_mother = models.BooleanField(default=False, verbose_name='البطاقة الوطنية للأم')
+    doc_death_certificate = models.BooleanField(default=False, verbose_name='شهادة الوفاة')
+    doc_residence_card = models.BooleanField(default=False, verbose_name='بطاقة السكن')
+    doc_personal_photos = models.BooleanField(default=False, verbose_name='الصور الشخصية')
+    doc_sponsor = models.BooleanField(default=False, verbose_name='الكفيل')
+    doc_medical_exam = models.BooleanField(default=False, verbose_name='الفحص الطبي')
+    doc_grade_confirmation = models.BooleanField(default=False, verbose_name='تأييد الدرجات')
+
     national_id = models.CharField(max_length=20, unique=True, verbose_name='رقم الهوية/الجواز')
     date_of_birth = models.DateField(verbose_name='تاريخ الميلاد')
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, verbose_name='الجنس')
-    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='رقم الهاتف')
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='رقم الهاتف', validators=[phone_validator])
     email = models.EmailField(blank=True, null=True, verbose_name='البريد الإلكتروني')
     address = models.TextField(blank=True, null=True, verbose_name='العنوان')
     governorate = models.CharField(max_length=100, choices=GOVERNORATE_CHOICES, blank=True, null=True, verbose_name='المحافظة')
@@ -246,11 +286,16 @@ class Student(models.Model):
 
     @property
     def full_name(self):
-        return f"{self.first_name} {self.second_name} {self.third_name} {self.last_name}"
+        parts = [self.first_name, self.second_name, self.third_name]
+        if self.last_name:
+            parts.append(self.last_name)
+        return " ".join(parts)
 
     @property
     def short_name(self):
-        return f"{self.first_name} {self.last_name}"
+        if self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.first_name
 
     @property
     def age(self):

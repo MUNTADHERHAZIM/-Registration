@@ -2,6 +2,7 @@ from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, Div, Field, HTML
 from .models import Student, Department, AcademicYear, Semester, StudentDocument, StudentPromotion
+from core.models import get_dynamic_choices
 
 
 class StudentForm(forms.ModelForm):
@@ -10,13 +11,19 @@ class StudentForm(forms.ModelForm):
         fields = [
             'first_name', 'second_name', 'third_name', 'last_name', 'surname',
             'mother_name', 'national_id', 'exam_number', 'date_of_birth', 'gender',
-            'religion', 'marital_status', 'health_status', 'origin_status',
+            'religion', 'ethnicity', 'birth_place', 'citizenship', 'marital_status', 'health_status', 'origin_status',
             'phone', 'guardian_phone', 'email', 'governorate', 'address', 'photo',
             'school_name', 'branch', 'specialization', 'has_foreign_language', 'grad_year_str', 'avg_no_additions',
-            'admission_avg', 'admission_round', 'admission_channel', 'institute',
+            'admission_avg', 'total_score', 'admission_round', 'admission_channel', 'institute',
             'department', 'level', 'study_type', 'registration_code',
             'registration_date', 'receipt_number', 'receipt_date', 'archive_locker', 'entry_year',
-            'status', 'discount_percentage', 'notes'
+            'status', 'discount_percentage', 'notes',
+            
+            # Document receipt status and checklist
+            'document_receipt', 'document_auth',
+            'doc_national_id_student', 'doc_national_id_father', 'doc_national_id_mother',
+            'doc_death_certificate', 'doc_residence_card', 'doc_personal_photos',
+            'doc_sponsor', 'doc_medical_exam', 'doc_grade_confirmation'
         ]
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -28,6 +35,21 @@ class StudentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Dynamically load choices from settings/DB
+        self.fields['governorate'].choices = get_dynamic_choices('governorate', Student.GOVERNORATE_CHOICES)
+        self.fields['religion'].choices = get_dynamic_choices('religion', Student.RELIGION_CHOICES)
+        self.fields['admission_channel'].choices = get_dynamic_choices('admission_channel', Student.ADMISSION_CHANNEL_CHOICES)
+        self.fields['branch'].choices = get_dynamic_choices('branch', Student.BRANCH_CHOICES)
+        self.fields['origin_status'].choices = get_dynamic_choices('origin_status', Student.ORIGIN_CHOICES)
+        self.fields['marital_status'].choices = get_dynamic_choices('marital_status', Student.MARITAL_STATUS_CHOICES)
+        self.fields['health_status'].choices = get_dynamic_choices('health_status', Student.HEALTH_STATUS_CHOICES)
+        self.fields['birth_place'].choices = get_dynamic_choices('birth_place', Student.BIRTH_PLACE_CHOICES)
+        self.fields['citizenship'].choices = get_dynamic_choices('citizenship', Student.CITIZENSHIP_CHOICES)
+        self.fields['gender'].choices = get_dynamic_choices('gender', Student.GENDER_CHOICES)
+        self.fields['level'].choices = get_dynamic_choices('level', Student.LEVEL_CHOICES)
+        self.fields['study_type'].choices = get_dynamic_choices('study_type', Student.STUDY_TYPE_CHOICES)
+        self.fields['status'].choices = get_dynamic_choices('status', Student.STATUS_CHOICES)
+
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -41,19 +63,24 @@ class StudentForm(forms.ModelForm):
             ),
             Row(
                 Column('surname', css_class='col-md-3'),
-                Column('mother_name', css_class='col-md-6'),
-                Column('religion', css_class='col-md-3'),
+                Column('mother_name', css_class='col-md-5'),
+                Column('religion', css_class='col-md-2'),
+                Column('ethnicity', css_class='col-md-2'),
             ),
             Row(
+                Column('birth_place', css_class='col-md-4'),
+                Column('citizenship', css_class='col-md-4'),
                 Column('national_id', css_class='col-md-4'),
+            ),
+            Row(
                 Column('exam_number', css_class='col-md-4'),
                 Column('date_of_birth', css_class='col-md-4'),
+                Column('gender', css_class='col-md-4'),
             ),
             Row(
-                Column('gender', css_class='col-md-3'),
-                Column('marital_status', css_class='col-md-3'),
-                Column('health_status', css_class='col-md-3'),
-                Column('origin_status', css_class='col-md-3'),
+                Column('marital_status', css_class='col-md-4'),
+                Column('health_status', css_class='col-md-4'),
+                Column('origin_status', css_class='col-md-4'),
             ),
             Row(
                 Column('phone', css_class='col-md-4'),
@@ -72,15 +99,15 @@ class StudentForm(forms.ModelForm):
                 Column('grad_year_str', css_class='col-md-3'),
             ),
             Row(
-                Column('has_foreign_language', css_class='col-md-4'),
                 Column('avg_no_additions', css_class='col-md-4'),
                 Column('admission_avg', css_class='col-md-4'),
+                Column('total_score', css_class='col-md-4'),
             ),
             Row(
-                Column('admission_round', css_class='col-md-4'),
-                Column('admission_channel', css_class='col-md-4'),
-                Column('institute', css_class='col-md-4'),
-                Column('department', css_class='col-md-4'),
+                Column('admission_round', css_class='col-md-3'),
+                Column('admission_channel', css_class='col-md-3'),
+                Column('institute', css_class='col-md-3'),
+                Column('department', css_class='col-md-3'),
             ),
             Row(
                 Column('level', css_class='col-md-3'),
@@ -95,12 +122,35 @@ class StudentForm(forms.ModelForm):
                 Column('archive_locker', css_class='col-md-6'),
             ),
             Row(
-                Column('receipt_number', css_class='col-md-3'),
-                Column('receipt_date', css_class='col-md-3'),
-                Column('discount_percentage', css_class='col-md-3'),
+                Column('receipt_number', css_class='col-md-4'),
+                Column('receipt_date', css_class='col-md-4'),
+                Column('discount_percentage', css_class='col-md-4'),
             ),
             Row(
                 Column('photo', css_class='col-md-12'),
+            ),
+            HTML('<hr><h6 class="fw-bold text-primary mb-3"><i class="fas fa-file-signature me-2"></i>تدقيق الوثائق والمستندات الورقية</h6>'),
+            Row(
+                Column('document_receipt', css_class='col-md-6'),
+                Column('document_auth', css_class='col-md-6'),
+            ),
+            Row(
+                Column('doc_national_id_student', css_class='col-md-4'),
+                Column('doc_national_id_father', css_class='col-md-4'),
+                Column('doc_national_id_mother', css_class='col-md-4'),
+            ),
+            Row(
+                Column('doc_death_certificate', css_class='col-md-4'),
+                Column('doc_residence_card', css_class='col-md-4'),
+                Column('doc_personal_photos', css_class='col-md-4'),
+            ),
+            Row(
+                Column('doc_sponsor', css_class='col-md-4'),
+                Column('doc_medical_exam', css_class='col-md-4'),
+                Column('doc_grade_confirmation', css_class='col-md-4'),
+            ),
+            Row(
+                Column('has_foreign_language', css_class='col-md-4'),
             ),
             'notes',
             Div(

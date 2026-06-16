@@ -139,6 +139,11 @@
                                     <a href="{% url 'update_request_status' req.pk %}" class="btn btn-outline-warning btn-sm" title="تحديث">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    {% if req.whatsapp_link %}
+                                    <a href="{{ req.whatsapp_link }}" target="_blank" class="btn btn-outline-success btn-sm" title="إرسال إشعار واتساب بالجاهزية">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

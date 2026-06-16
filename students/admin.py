@@ -27,7 +27,7 @@ class StudentResource(resources.ModelResource):
         column_name='اسم الجد', attribute='third_name',
     )
     last_name = fields.Field(
-        column_name='الكنية', attribute='last_name',
+        column_name='الاسم الرابع', attribute='last_name',
     )
     surname = fields.Field(
         column_name='اللقب', attribute='surname',
@@ -128,6 +128,78 @@ class StudentResource(resources.ModelResource):
     gpa = fields.Field(
         column_name='المعدل التراكمي', attribute='gpa',
     )
+    ethnicity = fields.Field(
+        column_name='القومية', attribute='ethnicity',
+    )
+    birth_place = fields.Field(
+        column_name='محل الولادة', attribute='birth_place',
+    )
+    citizenship = fields.Field(
+        column_name='الجنسية', attribute='citizenship',
+    )
+    total_score = fields.Field(
+        column_name='المجموع', attribute='total_score',
+    )
+    guardian_phone = fields.Field(
+        column_name='رقم ولي الأمر', attribute='guardian_phone',
+    )
+    discount_percentage = fields.Field(
+        column_name='نسبة التخفيض', attribute='discount_percentage',
+    )
+    archive_locker = fields.Field(
+        column_name='موقع الأرشيف', attribute='archive_locker',
+    )
+    specialization = fields.Field(
+        column_name='التخصص', attribute='specialization',
+    )
+    has_foreign_language = fields.Field(
+        column_name='يملك لغة أجنبية', attribute='has_foreign_language',
+    )
+    registration_code = fields.Field(
+        column_name='كود التسجيل', attribute='registration_code',
+    )
+    receipt_number = fields.Field(
+        column_name='رقم الوصل', attribute='receipt_number',
+    )
+    receipt_date = fields.Field(
+        column_name='تاريخ الوصل', attribute='receipt_date',
+    )
+    registration_date = fields.Field(
+        column_name='تاريخ التسجيل', attribute='registration_date',
+    )
+    document_receipt = fields.Field(
+        column_name='استلام الوثيقة', attribute='document_receipt',
+    )
+    document_auth = fields.Field(
+        column_name='مصادقة الوثيقة', attribute='document_auth',
+    )
+    doc_national_id_student = fields.Field(
+        column_name='البطاقة الوطنية للطالب', attribute='doc_national_id_student',
+    )
+    doc_national_id_father = fields.Field(
+        column_name='البطاقة الوطنية للأب', attribute='doc_national_id_father',
+    )
+    doc_national_id_mother = fields.Field(
+        column_name='البطاقة الوطنية للأم', attribute='doc_national_id_mother',
+    )
+    doc_death_certificate = fields.Field(
+        column_name='شهادة الوفاة', attribute='doc_death_certificate',
+    )
+    doc_residence_card = fields.Field(
+        column_name='بطاقة السكن', attribute='doc_residence_card',
+    )
+    doc_personal_photos = fields.Field(
+        column_name='الصور الشخصية', attribute='doc_personal_photos',
+    )
+    doc_sponsor = fields.Field(
+        column_name='الكفيل', attribute='doc_sponsor',
+    )
+    doc_medical_exam = fields.Field(
+        column_name='الفحص الطبي', attribute='doc_medical_exam',
+    )
+    doc_grade_confirmation = fields.Field(
+        column_name='تأييد الدرجات', attribute='doc_grade_confirmation',
+    )
 
     class Meta:
         model = Student
@@ -135,11 +207,17 @@ class StudentResource(resources.ModelResource):
         fields = (
             'student_id', 'first_name', 'second_name', 'third_name', 'last_name',
             'surname', 'mother_name', 'national_id', 'exam_number', 'date_of_birth',
-            'gender', 'religion', 'marital_status', 'health_status', 'origin_status',
-            'phone', 'email', 'governorate', 'address', 'department', 'entry_year',
-            'level', 'study_type', 'status', 'avg_no_additions', 'admission_avg',
-            'branch', 'admission_channel', 'grad_year_str', 'student_category',
-            'admission_round', 'institute', 'school_name', 'gpa',
+            'gender', 'religion', 'ethnicity', 'birth_place', 'citizenship', 'marital_status',
+            'health_status', 'origin_status', 'phone', 'guardian_phone', 'email', 'governorate',
+            'address', 'department', 'entry_year', 'level', 'study_type', 'status',
+            'avg_no_additions', 'admission_avg', 'total_score', 'branch', 'specialization',
+            'has_foreign_language', 'admission_channel', 'grad_year_str', 'student_category',
+            'admission_round', 'institute', 'school_name', 'gpa', 'archive_locker',
+            'registration_code', 'receipt_number', 'receipt_date', 'registration_date',
+            'discount_percentage', 'document_receipt', 'document_auth',
+            'doc_national_id_student', 'doc_national_id_father', 'doc_national_id_mother',
+            'doc_death_certificate', 'doc_residence_card', 'doc_personal_photos',
+            'doc_sponsor', 'doc_medical_exam', 'doc_grade_confirmation',
         )
         export_order = fields
         skip_unchanged = True
@@ -163,6 +241,17 @@ class StudentResource(resources.ModelResource):
         'اسم القسم': 'القسم',
         'الفرع العلمي': 'القسم',
         'الاختصاص': 'القسم',
+        'القوميه': 'القومية',
+        'محل ولاده': 'محل الولادة',
+        'جنسيه': 'الجنسية',
+        'المجموع الكلي': 'المجموع',
+        'المجموع': 'المجموع',
+        'رقم ولي الامر': 'رقم ولي الأمر',
+        'كود تسجيل': 'كود التسجيل',
+        'تاريخ تسجيل': 'تاريخ التسجيل',
+        'رقم وصل': 'رقم الوصل',
+        'تاريخ وصل': 'تاريخ الوصل',
+        'موقع الارشيف': 'موقع الأرشيف',
     }
 
     def before_import(self, dataset, using_transactions, dry_run, **kwargs):
@@ -204,18 +293,31 @@ class StudentResource(resources.ModelResource):
         Normalize incoming data before import.
         Headers are already normalized in before_import.
         """
+        def normalize_arabic(text):
+            if not text: return ""
+            text = str(text).strip()
+            text = re.sub(r'[أإآا]', 'ا', text)
+            text = re.sub(r'[ةه]', 'ه', text)
+            text = re.sub(r'[\u064B-\u0652]', '', text)
+            text = re.sub(r'\s+', '', text)
+            return text
+
         # --- 2. Handle full-name column splitting ---
-        for name_header in ['اسم الطالب', 'الاسم الكامل']:
-            full_name = row.get(name_header)
-            if full_name and not row.get('الاسم الأول'):
-                parts = str(full_name).split()
-                if len(parts) >= 1: row['الاسم الأول'] = parts[0]
-                if len(parts) >= 2: row['اسم الأب'] = parts[1]
-                if len(parts) >= 3: row['اسم الجد'] = parts[2]
-                if len(parts) >= 4: row['الكنية'] = ' '.join(parts[3:])
-                elif len(parts) > 1: row['الكنية'] = parts[-1]
-                else: row['الكنية'] = '-'
+        full_name = None
+        for key, value in row.items():
+            norm_k = normalize_arabic(key)
+            if norm_k in [normalize_arabic('اسم الطالب'), normalize_arabic('الاسم الكامل')]:
+                full_name = value
                 break
+
+        if full_name and not row.get('الاسم الأول'):
+            parts = str(full_name).split()
+            if len(parts) >= 1: row['الاسم الأول'] = parts[0]
+            if len(parts) >= 2: row['اسم الأب'] = parts[1]
+            if len(parts) >= 3: row['اسم الجد'] = parts[2]
+            if len(parts) >= 4: row['الاسم الرابع'] = ' '.join(parts[3:])
+            elif len(parts) > 1: row['الاسم الرابع'] = parts[-1]
+            else: row['الاسم الرابع'] = '-'
 
         # --- 3. Normalize date of birth ---
         dob = row.get('تاريخ الميلاد')

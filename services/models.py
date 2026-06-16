@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from students.models import Department
+from students.models import Department, phone_validator
 import uuid
 import datetime
 
@@ -10,12 +10,10 @@ class StudentRequest(models.Model):
         ('confirmation', 'تأييد دراسي'),
         ('graduation_doc', 'وثيقة تخرج'),
         ('transcript', 'كشف درجات'),
-        ('certificate', 'إفادة طالب'),
+        ('certificate', 'تاييد طالب'),
         ('postpone', 'طلب تأجيل'),
         ('withdrawal', 'طلب انسحاب'),
         ('transfer', 'طلب نقل'),
-        ('re_enrollment', 'طلب إعادة قيد'),
-        ('excuse', 'طلب عذر'),
         ('other', 'أخرى'),
     ]
 
@@ -24,7 +22,7 @@ class StudentRequest(models.Model):
         ('reviewing', 'قيد المراجعة'),
         ('approved', 'مقبول'),
         ('rejected', 'مرفوض'),
-        ('completed', 'مكتمل'),
+        ('completed', 'مكتمل'), 
     ]
 
     LEVEL_CHOICES = [
@@ -53,7 +51,7 @@ class StudentRequest(models.Model):
     national_id = models.CharField(
         max_length=20, verbose_name='رقم الهوية الوطنية', blank=True
     )
-    phone = models.CharField(max_length=20, verbose_name='رقم الهاتف')
+    phone = models.CharField(max_length=20, verbose_name='رقم الهاتف', validators=[phone_validator])
     email = models.EmailField(verbose_name='البريد الإلكتروني', blank=True)
     department = models.ForeignKey(
         Department, on_delete=models.CASCADE, related_name='requests', verbose_name='القسم', null=True

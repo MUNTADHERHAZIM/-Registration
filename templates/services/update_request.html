@@ -41,7 +41,14 @@
                         {% endif %}
                         <tr>
                             <td class="text-muted fw-bold">الهاتف</td>
-                            <td dir="ltr" class="text-end">{{ req.phone }}</td>
+                            <td dir="ltr" class="text-end">
+                                {{ req.phone }}
+                                {% if whatsapp_link %}
+                                <a href="{{ whatsapp_link }}" id="whatsapp-phone-link" target="_blank" class="text-success ms-2" title="مراسلة عبر واتساب">
+                                    <i class="fab fa-whatsapp"></i>
+                                </a>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% if req.email %}
                         <tr>
@@ -128,6 +135,11 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-1"></i>حفظ التحديث
                             </button>
+                            {% if whatsapp_link %}
+                            <a href="{{ whatsapp_link }}" id="whatsapp-notify-btn" target="_blank" class="btn btn-success">
+                                <i class="fab fa-whatsapp me-1"></i>مراسلة الطالب عبر واتساب
+                            </a>
+                            {% endif %}
                             <a href="{% url 'manage_requests' %}" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-right me-1"></i>العودة
                             </a>
@@ -138,4 +150,54 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.getElementById('id_status');
+    const notesTextarea = document.getElementById('id_admin_notes');
+    const whatsappBtn = document.getElementById('whatsapp-notify-btn');
+    const whatsappPhoneLink = document.getElementById('whatsapp-phone-link');
+    
+    if (statusSelect && notesTextarea) {
+        const studentName = "{{ req.student_name }}";
+        const requestType = "{{ req.get_request_type_display }}";
+        const trackingNum = "{{ req.tracking_number }}";
+        const phone = "{{ req.phone }}";
+        
+        function updateWhatsAppLink() {
+            const selectedStatusText = statusSelect.options[statusSelect.selectedIndex].text;
+            const notes = notesTextarea.value.trim();
+            
+            let message = `مرحباً ${studentName}، بخصوص طلبك (${requestType}) ذو الرقم التتبعي ${trackingNum}، تم تحديث حالته إلى (${selectedStatusText}).`;
+            if (notes) {
+                message += `\nملاحظات: ${notes}`;
+            }
+            
+            // Generate clean phone number
+            let cleanedPhone = phone.replace(/\D/g, '');
+            if (cleanedPhone.startsWith('0')) {
+                cleanedPhone = '964' + cleanedPhone.substring(1);
+            } else if (!cleanedPhone.startsWith('964')) {
+                cleanedPhone = '964' + cleanedPhone;
+            }
+            
+            const encodedMessage = encodeURIComponent(message);
+            const finalUrl = `https://wa.me/${cleanedPhone}?text=${encodedMessage}`;
+            
+            if (whatsappBtn) {
+                whatsappBtn.href = finalUrl;
+            }
+            if (whatsappPhoneLink) {
+                whatsappPhoneLink.href = finalUrl;
+            }
+        }
+        
+        statusSelect.addEventListener('change', updateWhatsAppLink);
+        notesTextarea.addEventListener('input', updateWhatsAppLink);
+        
+        // Initial call to set the link correctly on load
+        updateWhatsAppLink();
+    }
+});
+</script>
 {% endblock %}

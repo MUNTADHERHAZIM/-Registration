@@ -3,168 +3,450 @@
 {% block breadcrumb %}<li class="breadcrumb-item active">الطلاب</li>{% endblock %}
 {% block content %}
 <div class="fade-in">
-<!-- Filter & Search Bar -->
-<div class="card mb-3">
-    <div class="card-body py-3">
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <div class="search-box">
-                    <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="بحث بالاسم أو الرقم...">
-                    <i class="fas fa-search search-icon"></i>
+    <!-- Filter & Search Bar -->
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <div class="search-box">
+                        <input type="text" name="q" value="{{ search }}" class="form-control"
+                            placeholder="بحث بالاسم أو الرقم...">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-2">
-                <select name="department" class="form-select">
-                    <option value="">كل الأقسام</option>
-                    {% for dept in departments %}
-                    <option value="{{ dept.pk }}" {% if dept_filter == dept.pk|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="level" class="form-select">
-                    <option value="">كل المراحل</option>
-                    <option value="1" {% if level_filter == "1" %}selected{% endif %}>المرحلة الأولى</option>
-                    <option value="2" {% if level_filter == "2" %}selected{% endif %}>المرحلة الثانية</option>
-                    <option value="3" {% if level_filter == "3" %}selected{% endif %}>المرحلة الثالثة</option>
-                    <option value="4" {% if level_filter == "4" %}selected{% endif %}>المرحلة الرابعة</option>
-                    <option value="5" {% if level_filter == "5" %}selected{% endif %}>المرحلة الخامسة</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="status" class="form-select">
-                    <option value="">كل الحالات</option>
-                    <option value="active" {% if status_filter == "active" %}selected{% endif %}>نشط</option>
-                    <option value="suspended" {% if status_filter == "suspended" %}selected{% endif %}>موقوف</option>
-                    <option value="graduated" {% if status_filter == "graduated" %}selected{% endif %}>متخرج</option>
-                    <option value="withdrawn" {% if status_filter == "withdrawn" %}selected{% endif %}>منسحب</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="sort" class="form-select">
-                    <option value="student_id" {% if sort_filter == "student_id" %}selected{% endif %}>ترتيب: الرقم الجامعي</option>
-                    <option value="name" {% if sort_filter == "name" %}selected{% endif %}>ترتيب: الاسم (أبجدي)</option>
-                    <option value="-gpa" {% if sort_filter == "-gpa" %}selected{% endif %}>ترتيب: المعدل (الأعلى)</option>
-                    <option value="gpa" {% if sort_filter == "gpa" %}selected{% endif %}>ترتيب: المعدل (الأقل)</option>
-                    <option value="-created_at" {% if sort_filter == "-created_at" %}selected{% endif %}>ترتيب: الأحدث تسجيلاً</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1"><i class="fas fa-filter me-1"></i>فلترة</button>
-                <a href="{% url 'student_list' %}" class="btn btn-outline-secondary"><i class="fas fa-times"></i></a>
-            </div>
-        </form>
-    </div>
-</div>
+                <div class="col-md-2">
+                    <select name="department" class="form-select">
+                        <option value="">كل الأقسام</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.pk }}" {% if dept_filter == dept.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="level" class="form-select">
+                        <option value="">كل المراحل</option>
+                        <option value="1" {% if level_filter == "1" %}selected{% endif %}>المرحلة الأولى</option>
+                        <option value="2" {% if level_filter == "2" %}selected{% endif %}>المرحلة الثانية</option>
+                        <option value="3" {% if level_filter == "3" %}selected{% endif %}>المرحلة الثالثة</option>
+                        <option value="4" {% if level_filter == "4" %}selected{% endif %}>المرحلة الرابعة</option>
+                        <option value="5" {% if level_filter == "5" %}selected{% endif %}>المرحلة الخامسة</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">كل الحالات</option>
+                        <option value="active" {% if status_filter == "active" %}selected{% endif %}>نشط</option>
+                        <option value="suspended" {% if status_filter == "suspended" %}selected{% endif %}>موقوف</option>
+                        <option value="graduated" {% if status_filter == "graduated" %}selected{% endif %}>متخرج</option>
+                        <option value="withdrawn" {% if status_filter == "withdrawn" %}selected{% endif %}>منسحب</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sort" class="form-select">
+                        <option value="student_id" {% if sort_filter == "student_id" %}selected{% endif %}>ترتيب: الرقم
+                            الجامعي</option>
+                        <option value="name" {% if sort_filter == "name" %}selected{% endif %}>ترتيب: الاسم (أبجدي)
+                        </option>
+                        <option value="-gpa" {% if sort_filter == "-gpa" %}selected{% endif %}>ترتيب: المعدل (الأعلى)
+                        </option>
+                        <option value="gpa" {% if sort_filter == "gpa" %}selected{% endif %}>ترتيب: المعدل (الأقل)
+                        </option>
+                        <option value="-created_at" {% if sort_filter == "-created_at" %}selected{% endif %}>ترتيب: الأحدث
+                            تسجيلاً</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1"><i
+                            class="fas fa-filter me-1"></i>فلترة</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse"
+                        data-bs-target="#advancedFilters"
+                        aria-expanded="{% if doc_receipt_filter or doc_auth_filter or doc_student_filter or doc_father_filter or doc_mother_filter or doc_residence_filter or doc_photos_filter or doc_sponsor_filter or doc_medical_filter or doc_grade_filter or doc_death_filter %}true{% else %}false{% endif %}"
+                        aria-controls="advancedFilters" title="تصفية متقدمة"><i class="fas fa-sliders-h"></i></button>
+                    <a href="{% url 'student_list' %}" class="btn btn-outline-secondary"><i
+                            class="fas fa-times"></i></a>
+                </div>
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-user-graduate text-primary me-2"></i>
-        الطلاب <span class="badge bg-primary ms-1">{{ total_count }}</span></span>
-        <div class="d-flex gap-2">
-            <a href="{% url 'reports_home' %}?export=pdf&{{ request.GET.urlencode }}" class="btn btn-outline-danger btn-sm">
-                <i class="fas fa-file-pdf me-1"></i>PDF
-            </a>
-            <a href="{% url 'students_report' %}?export=excel&{{ request.GET.urlencode }}" class="btn btn-outline-success btn-sm">
-                <i class="fas fa-file-excel me-1"></i>Excel
-            </a>
-            <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus me-1"></i>إضافة طالب
-            </a>
+                <!-- Collapsible Advanced Filters -->
+                <div class="collapse {% if doc_receipt_filter or doc_auth_filter or doc_student_filter or doc_father_filter or doc_mother_filter or doc_residence_filter or doc_photos_filter or doc_sponsor_filter or doc_medical_filter or doc_grade_filter or doc_death_filter %}show{% endif %} mt-3 w-100"
+                    id="advancedFilters">
+                    <div class="p-3 bg-light rounded border">
+                        <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-file-invoice me-1"></i>جرد وتدقيق وثائق
+                            الطلاب والملفات</h6>
+                        <div class="row g-3">
+                            <!-- Primary Document Status -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">حالة استلام الوثيقة</label>
+                                <select name="doc_receipt" class="form-select select2-filter">
+                                    <option value="">كل الحالات</option>
+                                    <option value="present" {% if doc_receipt_filter == "present" %}selected{% endif %}>موجودة</option>
+                                    <option value="not_present" {% if doc_receipt_filter == "not_present" %}selected{% endif %}>غير موجودة</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">حالة مصادقة الوثيقة</label>
+                                <select name="doc_auth" class="form-select select2-filter">
+                                    <option value="">كل الحالات</option>
+                                    <option value="certified" {% if doc_auth_filter == "certified" %}selected{% endif %}>مصادقة</option>
+                                    <option value="not_certified" {% if doc_auth_filter == "not_certified" %}selected{% endif %}>غير مصادقة</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+                        <h6 class="fw-bold mb-3 text-secondary" style="font-size: 13px;"><i
+                                class="fas fa-tasks me-1"></i>تدقيق جيك لست المستندات المحددة (Checklist)</h6>
+                        <div class="row g-2">
+                            <!-- doc_national_id_student -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">البطاقة الوطنية للطالب</label>
+                                <select name="doc_student" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_student_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_student_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_national_id_father -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">البطاقة الوطنية للأب</label>
+                                <select name="doc_father" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_father_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_father_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_national_id_mother -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">البطاقة الوطنية للأم</label>
+                                <select name="doc_mother" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_mother_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_mother_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_residence_card -->
+                            <div class="col-md-4 mt-2">
+                                <label class="form-label small fw-bold">بطاقة السكن</label>
+                                <select name="doc_residence" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_residence_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_residence_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_personal_photos -->
+                            <div class="col-md-4 mt-2">
+                                <label class="form-label small fw-bold">الصور الشخصية</label>
+                                <select name="doc_photos" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_photos_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_photos_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_sponsor -->
+                            <div class="col-md-4 mt-2">
+                                <label class="form-label small fw-bold">الكفيل</label>
+                                <select name="doc_sponsor" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_sponsor_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_sponsor_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_medical_exam -->
+                            <div class="col-md-4 mt-2">
+                                <label class="form-label small fw-bold">الفحص الطبي</label>
+                                <select name="doc_medical" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_medical_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_medical_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_grade_confirmation -->
+                            <div class="col-md-4 mt-2">
+                                <label class="form-label small fw-bold">تأييد الدرجات</label>
+                                <select name="doc_grade" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_grade_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_grade_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                            <!-- doc_death_certificate -->
+                            <div class="col-md-4 mt-2">
+                                <label class="form-label small fw-bold">شهادة الوفاة</label>
+                                <select name="doc_death" class="form-select form-select-sm select2-filter">
+                                    <option value="">الكل</option>
+                                    <option value="true" {% if doc_death_filter == "true" %}selected{% endif %}>موجودة
+                                    </option>
+                                    <option value="false" {% if doc_death_filter == "false" %}selected{% endif %}>غير
+                                        موجودة</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>الطالب</th>
-                        <th>الرقم الجامعي</th>
-                        <th>القسم</th>
-                        <th>المرحلة</th>
-                        <th>الجنس</th>
-                        <th>نوع الدراسة</th>
-                        <th>الحالة</th>
-                        <th>المعدل</th>
-                        <th>الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for student in students %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                {% if student.photo %}
-                                <img src="{{ student.photo.url }}" class="student-avatar" alt="">
-                                {% else %}
-                                <div class="student-avatar">{{ student.first_name|first }}{{ student.last_name|first|default:"" }}</div>
-                                {% endif %}
-                                <div>
-                                    <a href="{% url 'student_detail' student.pk %}" class="fw-600 text-decoration-none text-dark">{{ student.short_name }}</a>
-                                    {% if student.phone %}
-                                    <br><small class="text-muted"><i class="fas fa-phone-alt me-1" style="font-size: 0.8em;"></i>{{ student.phone }}</small>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-user-graduate text-primary me-2"></i>
+                الطلاب <span class="badge bg-primary ms-1">{{ total_count }}</span></span>
+            <div class="d-flex gap-2">
+                <a href="{% url 'students_report' %}?export=pdf&{{ request.GET.urlencode }}"
+                    class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </a>
+                <a href="{% url 'students_report' %}?export=excel&{{ request.GET.urlencode }}"
+                    class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </a>
+                {% if user.is_staff %}
+                <a href="{% url 'student_import_export' %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i>استيراد/تصدير
+                </a>
+                {% endif %}
+                <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>إضافة طالب
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <form id="bulk-update-form" method="post"
+                action="{% url 'bulk_update_documents' %}?{{ request.GET.urlencode }}">
+                {% csrf_token %}
+
+                <!-- Bulk Actions Panel (Hidden by default) -->
+                <div id="bulk-actions-panel"
+                    class="bg-light p-3 border-bottom d-none align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary fs-6 py-2 px-3"><i class="fas fa-tasks me-1"></i> تم تحديد <span
+                                id="selected-count">0</span> طلاب</span>
+                        <i class="fas fa-arrow-left text-muted mx-2"></i>
+                        <span class="text-muted small fw-bold">تحديث جماعي لمستندات الجيك لست المحددة:</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <select name="bulk_doc_field" class="form-select form-select-sm" style="max-width: 250px;"
+                            required>
+                            <option value="" disabled selected>اختر المستند لتحديثه...</option>
+                            <option value="doc_national_id_student">البطاقة الوطنية للطالب</option>
+                            <option value="doc_national_id_father">البطاقة الوطنية للأب</option>
+                            <option value="doc_national_id_mother">البطاقة الوطنية للأم</option>
+                            <option value="doc_death_certificate">شهادة الوفاة</option>
+                            <option value="doc_residence_card">بطاقة السكن</option>
+                            <option value="doc_personal_photos">الصور الشخصية</option>
+                            <option value="doc_sponsor">الكفيل</option>
+                            <option value="doc_medical_exam">الفحص الطبي</option>
+                            <option value="doc_grade_confirmation">تأييد الدرجات</option>
+                        </select>
+                        <select name="bulk_doc_status" class="form-select form-select-sm" style="max-width: 140px;"
+                            required>
+                            <option value="true">موجودة (مستلمة)</option>
+                            <option value="false">غير موجودة (ناقصة)</option>
+                        </select>
+                        <button type="submit" class="btn btn-success btn-sm px-4 fw-bold">
+                            <i class="fas fa-check-double me-1"></i> تطبيق التحديث
+                        </button>
+                        <button type="button" id="bulk-delete-btn" class="btn btn-danger btn-sm px-4 fw-bold">
+                            <i class="fas fa-trash me-1"></i> حذف جماعي
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px;" class="text-center">
+                                    <input type="checkbox" id="select-all" class="form-check-input">
+                                </th>
+                                <th>الطالب</th>
+                                <th>الرقم الجامعي</th>
+                                <th>القسم</th>
+                                <th>المرحلة</th>
+                                <th>الجنس</th>
+                                <th>نوع الدراسة</th>
+                                <th>الحالة</th>
+                                <th>المعدل</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td class="text-center">
+                                    <input type="checkbox" name="student_ids" value="{{ student.pk }}"
+                                        class="form-check-input student-select">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if student.photo %}
+                                        <img src="{{ student.photo.url }}" class="student-avatar" alt="">
+                                        {% else %}
+                                        <div class="student-avatar">{{ student.first_name|default:""|first }}{{ student.last_name|default:""|first }}</div>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'student_detail' student.pk %}" class="fw-600 text-decoration-none text-dark">{{ student.short_name }}</a>
+                                            {% if student.phone %}
+                                            <br><small class="text-muted"><i class="fas fa-phone-alt me-1"
+                                                    style="font-size: 0.8em;"></i>{{ student.phone }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><code class="text-primary">{{ student.student_id }}</code></td>
+                                <td><span class="text-truncate d-inline-block" style="max-width:130px">{{ student.department.name }}</span></td>
+                                <td>{{ student.get_level_display }}</td>
+                                <td>
+                                    {% if student.gender == 'male' %}
+                                    <span class="text-primary"><i class="fas fa-mars me-1"></i>ذكر</span>
+                                    {% else %}
+                                    <span class="text-danger"><i class="fas fa-venus me-1"></i>أنثى</span>
                                     {% endif %}
-                                </div>
-                            </div>
-                        </td>
-                        <td><code class="text-primary">{{ student.student_id }}</code></td>
-                        <td><span class="text-truncate d-inline-block" style="max-width:130px">{{ student.department.name }}</span></td>
-                        <td>{{ student.get_level_display }}</td>
-                        <td>
-                            {% if student.gender == 'male' %}
-                            <span class="text-primary"><i class="fas fa-mars me-1"></i>ذكر</span>
-                            {% else %}
-                            <span class="text-danger"><i class="fas fa-venus me-1"></i>أنثى</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ student.get_study_type_display }}</td>
-                        <td><span class="badge status-{{ student.status }}">{{ student.get_status_display }}</span></td>
-                        <td>
-                            <span class="fw-bold text-{{ student.get_gpa_color }}">{{ student.gpa }}</span>
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                <a href="{% url 'student_detail' student.pk %}" class="btn btn-outline-primary btn-sm" title="عرض"><i class="fas fa-eye"></i></a>
-                                <a href="{% url 'student_edit' student.pk %}" class="btn btn-outline-warning btn-sm" title="تعديل"><i class="fas fa-edit"></i></a>
-                                <a href="{% url 'student_delete' student.pk %}" class="btn btn-outline-danger btn-sm" title="حذف"><i class="fas fa-trash"></i></a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="9" class="text-center py-5">
-                            <i class="fas fa-user-slash fa-3x text-muted mb-3 d-block"></i>
-                            <div class="text-muted">لا توجد نتائج مطابقة</div>
-                            <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm mt-2">إضافة طالب جديد</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                                </td>
+                                <td>{{ student.get_study_type_display }}</td>
+                                <td><span class="badge status-{{ student.status }}">{{ student.get_status_display }}</span></td>
+                                <td>
+                                    <span class="fw-bold text-{{ student.get_gpa_color }}">{{ student.gpa }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'student_detail' student.pk %}"
+                                            class="btn btn-outline-primary btn-sm" title="عرض"><i
+                                                class="fas fa-eye"></i></a>
+                                        <a href="{% url 'student_edit' student.pk %}"
+                                            class="btn btn-outline-warning btn-sm" title="تعديل"><i
+                                                class="fas fa-edit"></i></a>
+                                        <a href="{% url 'student_delete' student.pk %}"
+                                            class="btn btn-outline-danger btn-sm" title="حذف"><i
+                                                class="fas fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-5">
+                                    <i class="fas fa-user-slash fa-3x text-muted mb-3 d-block"></i>
+                                    <div class="text-muted">لا توجد نتائج مطابقة</div>
+                                    <a href="{% url 'student_add' %}" class="btn btn-primary btn-sm mt-2">إضافة طالب
+                                        جديد</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
         </div>
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <small class="text-muted">عرض {{ page_obj.start_index }}–{{ page_obj.end_index }} من {{ total_count }}</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}&doc_receipt={{ doc_receipt_filter }}&doc_auth={{ doc_auth_filter }}&doc_student={{ doc_student_filter }}&doc_father={{ doc_father_filter }}&doc_mother={{ doc_mother_filter }}&doc_residence={{ doc_residence_filter }}&doc_photos={{ doc_photos_filter }}&doc_sponsor={{ doc_sponsor_filter }}&doc_medical={{ doc_medical_filter }}&doc_grade={{ doc_grade_filter }}&doc_death={{ doc_death_filter }}">السابق</a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %} <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ num }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}&doc_receipt={{ doc_receipt_filter }}&doc_auth={{ doc_auth_filter }}&doc_student={{ doc_student_filter }}&doc_father={{ doc_father_filter }}&doc_mother={{ doc_mother_filter }}&doc_residence={{ doc_residence_filter }}&doc_photos={{ doc_photos_filter }}&doc_sponsor={{ doc_sponsor_filter }}&doc_medical={{ doc_medical_filter }}&doc_grade={{ doc_grade_filter }}&doc_death={{ doc_death_filter }}">{{ num }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link"
+                                href="?page={{ page_obj.next_page_number }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}&doc_receipt={{ doc_receipt_filter }}&doc_auth={{ doc_auth_filter }}&doc_student={{ doc_student_filter }}&doc_father={{ doc_father_filter }}&doc_mother={{ doc_mother_filter }}&doc_residence={{ doc_residence_filter }}&doc_photos={{ doc_photos_filter }}&doc_sponsor={{ doc_sponsor_filter }}&doc_medical={{ doc_medical_filter }}&doc_grade={{ doc_grade_filter }}&doc_death={{ doc_death_filter }}">التالي</a>
+                        </li>
+                        {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
     </div>
-    {% if page_obj.has_other_pages %}
-    <div class="card-footer d-flex justify-content-between align-items-center">
-        <small class="text-muted">عرض {{ page_obj.start_index }}–{{ page_obj.end_index }} من {{ total_count }}</small>
-        <nav>
-            <ul class="pagination pagination-sm mb-0">
-                {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}">السابق</a></li>
-                {% endif %}
-                {% for num in page_obj.paginator.page_range %}
-                {% if num == page_obj.number %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}">{{ num }}</a></li>
-                {% endif %}
-                {% endfor %}
-                {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search }}&department={{ dept_filter }}&level={{ level_filter }}&status={{ status_filter }}&gender={{ gender_filter }}&sort={{ sort_filter }}">التالي</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </div>
-    {% endif %}
-</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const studentCheckboxes = document.querySelectorAll('.student-select');
+            const bulkActionsPanel = document.getElementById('bulk-actions-panel');
+            const selectedCountSpan = document.getElementById('selected-count');
+
+            function updateBulkActionsState() {
+                const checkedCount = document.querySelectorAll('.student-select:checked').length;
+                if (selectedCountSpan) {
+                    selectedCountSpan.textContent = checkedCount;
+                }
+
+                if (checkedCount > 0) {
+                    if (bulkActionsPanel) {
+                        bulkActionsPanel.classList.remove('d-none');
+                        bulkActionsPanel.classList.add('d-flex');
+                    }
+                } else {
+                    if (bulkActionsPanel) {
+                        bulkActionsPanel.classList.remove('d-flex');
+                        bulkActionsPanel.classList.add('d-none');
+                    }
+                }
+            }
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function () {
+                    studentCheckboxes.forEach(cb => {
+                        cb.checked = selectAllCheckbox.checked;
+                    });
+                    updateBulkActionsState();
+                });
+            }
+
+            studentCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function () {
+                    const allChecked = Array.from(studentCheckboxes).every(c => c.checked);
+                    const noneChecked = Array.from(studentCheckboxes).every(c => !c.checked);
+
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.checked = allChecked;
+                        selectAllCheckbox.indeterminate = !allChecked && !noneChecked;
+                    }
+
+                    updateBulkActionsState();
+                });
+            });
+
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const bulkForm = document.getElementById('bulk-update-form');
+            if (bulkDeleteBtn && bulkForm) {
+                bulkDeleteBtn.addEventListener('click', function () {
+                    const checkedCount = document.querySelectorAll('.student-select:checked').length;
+                    if (confirm(`هل أنت متأكد تماماً من رغبتك في حذف ${checkedCount} طلاب نهائياً من النظام؟\nلا يمكن التراجع عن هذا الإجراء ابداً!`)) {
+                        const bulkDocField = document.querySelector('[name="bulk_doc_field"]');
+                        const bulkDocStatus = document.querySelector('[name="bulk_doc_status"]');
+                        if (bulkDocField) bulkDocField.required = false;
+                        if (bulkDocStatus) bulkDocStatus.required = false;
+
+                        bulkForm.action = "{% url 'bulk_delete_students' %}?{{ request.GET.urlencode }}";
+                        bulkForm.submit();
+                    }
+                });
+            }
+        });
+    </script>
 </div>
 {% endblock %}

@@ -139,7 +139,7 @@
                                 {% if student.photo %}
                                 <img src="{{ student.photo.url }}" class="student-avatar" alt="">
                                 {% else %}
-                                <div class="student-avatar">{{ student.first_name|first }}{{ student.last_name|first }}</div>
+                                <div class="student-avatar">{{ student.first_name|default:""|first }}{{ student.last_name|default:""|first }}</div>
                                 {% endif %}
                                 <div>
                                     <div class="fw-600">{{ student.short_name }}</div>

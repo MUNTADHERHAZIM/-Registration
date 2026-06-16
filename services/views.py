@@ -11,6 +11,7 @@ import uuid
 from .models import StudentRequest, FAQ
 from .forms import StudentRequestForm, TrackRequestForm, UpdateRequestStatusForm
 from core.models import AdmissionGuide
+from students.whatsapp_utils import generate_whatsapp_link
 
 
 # ============================================================
@@ -158,6 +159,11 @@ def manage_requests(request):
     paginator = Paginator(requests_qs, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
 
+    # Generate WhatsApp notification link for each request in the page
+    for req in page_obj:
+        msg = f"مرحباً {req.student_name}، نود إعلامك بأنه تم إتمام طلبك ({req.get_request_type_display()}) ذو الرقم التتبعي {req.tracking_number} بنجاح. يرجى الحضور لاستلامه."
+        req.whatsapp_link = generate_whatsapp_link(req.phone, msg)
+
     context = {
         'page_obj': page_obj,
         'stats': stats,
@@ -190,9 +196,16 @@ def update_request_status(request, pk):
     else:
         form = UpdateRequestStatusForm(instance=student_request)
 
+    # Generate initial WhatsApp link
+    msg = f"مرحباً {student_request.student_name}، بخصوص طلبك ({student_request.get_request_type_display()}) ذو الرقم التتبعي {student_request.tracking_number}، تم تحديث حالته إلى ({student_request.get_status_display()})."
+    if student_request.admin_notes:
+        msg += f"\nملاحظات: {student_request.admin_notes}"
+    whatsapp_link = generate_whatsapp_link(student_request.phone, msg)
+
     context = {
         'form': form,
         'req': student_request,
+        'whatsapp_link': whatsapp_link,
         'title': f'تحديث الطلب {student_request.tracking_number}',
     }
     return render(request, 'services/update_request.html', context)

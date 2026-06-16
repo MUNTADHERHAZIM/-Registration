@@ -91,6 +91,25 @@ document.addEventListener('DOMContentLoaded', function() {
             cameraArea.classList.add('d-none');
         }, 'image/jpeg');
     });
+
+    // Toggle document authentication field based on document receipt value
+    const receiptSelect = document.getElementById('id_document_receipt');
+    const authWrapper = document.getElementById('div_id_document_auth');
+    if (receiptSelect && authWrapper) {
+        function toggleAuthField() {
+            if (receiptSelect.value === 'present') {
+                authWrapper.style.display = 'block';
+            } else {
+                authWrapper.style.display = 'none';
+            }
+        }
+        receiptSelect.addEventListener('change', toggleAuthField);
+        // We delay the initial call slightly or run it after DOM loads to let Select2/crispy load
+        setTimeout(toggleAuthField, 100);
+        
+        // Also listen to Select2 change event if select2 is used
+        $(receiptSelect).on('change', toggleAuthField);
+    }
 });
 </script>
 {% endblock %}
