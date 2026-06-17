@@ -286,10 +286,14 @@ class Student(models.Model):
 
     @property
     def full_name(self):
-        parts = [self.first_name, self.second_name, self.third_name]
-        if self.last_name:
-            parts.append(self.last_name)
+        parts = []
+        for part in [self.first_name, self.second_name, self.third_name, self.last_name]:
+            if part:
+                parts.append(str(part).strip())
         return " ".join(parts)
+
+
+    
 
     @property
     def short_name(self):
