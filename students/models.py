@@ -293,9 +293,7 @@ class Student(models.Model):
 
     @property
     def short_name(self):
-        if self.last_name:
-            return f"{self.first_name} {self.last_name}"
-        return self.first_name
+        return self.full_name
 
     @property
     def age(self):
